@@ -29,9 +29,12 @@ import androidx.annotation.NonNull;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineCallback;
 import com.mapbox.android.core.location.LocationEngineProvider;
+import com.mapbox.android.core.location.LocationEngineRequest;
 import com.mapbox.android.core.location.LocationEngineResult;
 import com.mapbox.android.telemetry.TelemetryEnabler;
 import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdate;
@@ -77,8 +80,17 @@ import static com.mapbox.mapboxgl.MapboxMapsPlugin.PAUSED;
 import static com.mapbox.mapboxgl.MapboxMapsPlugin.RESUMED;
 import static com.mapbox.mapboxgl.MapboxMapsPlugin.STARTED;
 import static com.mapbox.mapboxgl.MapboxMapsPlugin.STOPPED;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.exponential;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.literal;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.zoom;
 
 import com.mapbox.mapboxsdk.plugins.localization.LocalizationPlugin;
+import com.mapbox.mapboxsdk.style.layers.CircleLayer;
+import com.mapbox.mapboxsdk.style.layers.Layer;
+import com.mapbox.mapboxsdk.style.layers.Property;
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
+import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
+import com.mapbox.mapboxsdk.style.sources.Source;
 
 /**
  * Controller of a single MapboxMaps MapView instance.
@@ -124,6 +136,8 @@ final class MapboxMapController
   private LocationComponent locationComponent = null;
   private LocationEngine locationEngine = null;
   private LocalizationPlugin localizationPlugin;
+  private GeoJsonSource locationSource;
+  private LocationEngineCallback locationCallback;
 
   MapboxMapController(
     int id,
@@ -202,6 +216,7 @@ final class MapboxMapController
         mapboxMap.removeOnCameraIdleListener(this);
         mapboxMap.removeOnCameraMoveStartedListener(this);
         mapboxMap.removeOnCameraMoveListener(this);
+        locationEngine.removeLocationUpdates(locationCallback);
         mapView.onDestroy();
         break;
       default:
@@ -322,6 +337,9 @@ final class MapboxMapController
       enableLineManager(style);
       enableSymbolManager(style);
       enableCircleManager(style);
+      enableLocationLayer(style); // ROLAND
+
+
       if (myLocationEnabled) {
         enableLocationComponent(style);
       }
@@ -334,6 +352,40 @@ final class MapboxMapController
       methodChannel.invokeMethod("map#onStyleLoaded", null);
     }
   };
+
+  public void enableLocationLayer(Style style) {
+    locationSource = new GeoJsonSource("location_source", FeatureCollection.fromJson(""));
+    style.addSource(locationSource);
+    style.addLayer(getActionRangeLayer());
+  }
+
+  public void setLocation(LatLng location, int range) {
+    locationSource.setGeoJson(getLocationJson(location, range));
+  }
+
+  private FeatureCollection getLocationJson(LatLng location, int range) {
+    List<Feature> features = new ArrayList<>();
+    Feature f = Feature.fromGeometry(Point.fromLngLat(location.getLongitude(), location.getLatitude()));
+    f.addNumberProperty("range", range * 18.0f);
+    features.add(f);
+    return FeatureCollection.fromFeatures(features);
+  }
+
+  private Layer getActionRangeLayer() {
+    return new CircleLayer("range_layer", "location_source")
+            .withProperties(
+                    PropertyFactory.circlePitchAlignment(Property.CIRCLE_PITCH_ALIGNMENT_MAP),
+                    PropertyFactory.circleOpacity(0.0f),
+                    PropertyFactory.circleColor("#000000"),
+                    PropertyFactory.circleRadius(Expression.interpolate(
+                            exponential(2), zoom(),
+                            literal(0.0f), literal(0.0f),
+                            literal(20.0f), Expression.get("range"))),
+                    PropertyFactory.circleStrokeColor("#4A515B"),
+                    PropertyFactory.circleStrokeOpacity(0.6f),
+                    PropertyFactory.circleStrokeWidth(2.0f)
+            );
+  }
 
   @SuppressWarnings( {"MissingPermission"})
   private void enableLocationComponent(@NonNull Style style) {
@@ -353,6 +405,17 @@ final class MapboxMapController
       updateMyLocationRenderMode();
       setMyLocationRenderMode(this.myLocationRenderMode);
       locationComponent.addOnCameraTrackingChangedListener(this);
+      locationCallback = new LocationEngineCallback<LocationEngineResult>() {
+        @Override
+        public void onSuccess(LocationEngineResult locationEngineResult) {
+          setLocation(new LatLng(locationEngineResult.getLastLocation().getLatitude(), locationEngineResult.getLastLocation().getLongitude()), 250);
+        }
+  
+        @Override
+        public void onFailure(@NonNull Exception exception) {
+        }
+      };
+      locationEngine.requestLocationUpdates(new LocationEngineRequest.Builder(10).build(), locationCallback, null);
     } else {
       Log.e(TAG, "missing location permissions");
     }
