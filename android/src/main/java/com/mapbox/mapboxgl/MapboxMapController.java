@@ -89,6 +89,7 @@ import com.mapbox.mapboxsdk.style.layers.CircleLayer;
 import com.mapbox.mapboxsdk.style.layers.Layer;
 import com.mapbox.mapboxsdk.style.layers.Property;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
+import com.mapbox.mapboxsdk.style.layers.PropertyValue;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.mapbox.mapboxsdk.style.sources.Source;
 
@@ -303,6 +304,7 @@ final class MapboxMapController
       mapReadyResult.success(null);
       mapReadyResult = null;
     }
+
     mapboxMap.addOnCameraMoveStartedListener(this);
     mapboxMap.addOnCameraMoveListener(this);
     mapboxMap.addOnCameraIdleListener(this);
@@ -337,7 +339,20 @@ final class MapboxMapController
       enableLineManager(style);
       enableSymbolManager(style);
       enableCircleManager(style);
-      enableLocationLayer(style); // ROLAND
+
+      enableLocationLayer(style); // CUSTOM
+      Layer symbolLayer = style.getLayer("mapbox-android-symbol-layer-1");
+      symbolLayer.setProperties(
+              PropertyFactory.iconSize(Expression.interpolate(
+                      exponential(1.4), zoom(),
+                      literal(0.0f), literal(0.0f),
+                      literal(20.0f), literal(1.3))),
+              PropertyFactory.textSize(Expression.interpolate(
+                      exponential(1.4), zoom(),
+                      literal(0.0f), literal(0.0f),
+                      literal(20.0f), literal(50)))
+
+      );
 
 
       if (myLocationEnabled) {

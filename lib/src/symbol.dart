@@ -151,13 +151,13 @@ class SymbolOptions {
       }
     }
 
-    addIfPresent('iconSize', iconSize);
+    // addIfPresent('iconSize', iconSize);
     addIfPresent('iconImage', iconImage);
     addIfPresent('iconRotate', iconRotate);
     addIfPresent('iconOffset', _offsetToJson(iconOffset));
     addIfPresent('iconAnchor', iconAnchor);
     addIfPresent('textField', textField);
-    addIfPresent('textSize', textSize);
+    // addIfPresent('textSize', textSize);
     addIfPresent('textMaxWidth', textMaxWidth);
     addIfPresent('textLetterSpacing', textLetterSpacing);
     addIfPresent('textJustify', textJustify);
