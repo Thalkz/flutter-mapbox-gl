@@ -521,22 +521,35 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         circleAnnotationController!.annotationsInteractionEnabled = true
         circleAnnotationController?.delegate = self
         
+        
+        // CUSTOM PART BEGIN
+        // It make symbols scale with zoom when no iconSize specified
+        
+        // Get symbol layer
         let symbolLayer = symbolAnnotationController!.layer;
                 
+        // Icon scale stops
         let iconScaleStops = [
             0:0,
-            20:1.3
+            20:2.5
         ]
         
-        let textFontSizeStops = [
-                   0:0,
-                   20:1.3
-               ]
-        
-
+        // Icon scale stops
+        let textSizeStops = [
+            0:0,
+            14.5:0,
+            14.6:10,
+            20:15
+        ]
+    
+        // Update iconScale value with an expression
         symbolLayer.setValue(NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'exponential', 1.4, %@)", iconScaleStops), forKey: "iconScale")
         
-        symbolLayer.setValue(NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'linear', 7, %@)", textFontSizeStops), forKey: "textSize")
+         symbolLayer.setValue(NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'exponential', 1.4, %@)", textSizeStops), forKey: "textFontSize")
+        
+        symbolLayer.setValue(NSExpression(forConstantValue: ["Averta Semibold"]), forKey: "textFontNames")
+        
+        // CUSTOM PART END
         
         mapReadyResult?(nil)
         if let channel = channel {

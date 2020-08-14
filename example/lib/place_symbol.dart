@@ -272,6 +272,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
             height: 200.0,
             child: MapboxMap(
               accessToken: MapsDemo.ACCESS_TOKEN,
+              styleString: 'mapbox://styles/neojgrandchavin/ckdpyr3oe0ot31insgzk7vwjh',
               onMapCreated: _onMapCreated,
               onStyleLoadedCallback: _onStyleLoaded,
               initialCameraPosition: const CameraPosition(
