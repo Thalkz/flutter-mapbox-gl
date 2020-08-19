@@ -2,16 +2,22 @@
   "configVersion": 2,
   "packages": [
     {
-      "name": "collection",
-      "rootUri": "file:///Users/julien/.pub-cache/hosted/pub.dartlang.org/collection-1.14.12",
+      "name": "characters",
+      "rootUri": "file:///Users/julien/.pub-cache/hosted/pub.dartlang.org/characters-1.0.0",
       "packageUri": "lib/",
-      "languageVersion": "2.0"
+      "languageVersion": "2.6"
+    },
+    {
+      "name": "collection",
+      "rootUri": "file:///Users/julien/.pub-cache/hosted/pub.dartlang.org/collection-1.14.13",
+      "packageUri": "lib/",
+      "languageVersion": "2.3"
     },
     {
       "name": "flutter",
       "rootUri": "file:///Users/julien/other_bin/flutter/packages/flutter",
       "packageUri": "lib/",
-      "languageVersion": "2.2"
+      "languageVersion": "2.9"
     },
     {
       "name": "meta",
@@ -27,9 +33,9 @@
     },
     {
       "name": "typed_data",
-      "rootUri": "file:///Users/julien/.pub-cache/hosted/pub.dartlang.org/typed_data-1.1.6",
+      "rootUri": "file:///Users/julien/.pub-cache/hosted/pub.dartlang.org/typed_data-1.2.0",
       "packageUri": "lib/",
-      "languageVersion": "2.0"
+      "languageVersion": "2.4"
     },
     {
       "name": "vector_math",
@@ -44,7 +50,7 @@
       "languageVersion": "2.1"
     }
   ],
-  "generated": "2020-08-12T08:25:53.474686Z",
+  "generated": "2020-08-18T13:55:03.989456Z",
   "generator": "pub",
-  "generatorVersion": "2.8.4"
+  "generatorVersion": "2.9.1"
 }

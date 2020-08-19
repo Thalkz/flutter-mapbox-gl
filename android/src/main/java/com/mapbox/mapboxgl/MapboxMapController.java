@@ -7,6 +7,7 @@ package com.mapbox.mapboxgl;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
+import android.app.Presentation;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -14,11 +15,16 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+
+import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.Geometry;
+import com.mapbox.geojson.Point;
 
 import androidx.annotation.NonNull;
 
@@ -26,8 +32,15 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 
+import static com.mapbox.mapboxgl.Convert.toFloat;
+import static com.mapbox.mapboxgl.Convert.toInt;
+import static com.mapbox.mapboxgl.Convert.toLatLng;
+import static com.mapbox.mapboxgl.Convert.toMap;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.e;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.exponential;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.get;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.literal;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.toColor;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.zoom;
 
 
@@ -42,6 +55,7 @@ import com.mapbox.android.core.location.LocationEngineProvider;
 import com.mapbox.android.core.location.LocationEngineResult;
 import com.mapbox.android.telemetry.TelemetryEnabler;
 import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.Polygon;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdate;
@@ -64,6 +78,8 @@ import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.plugins.annotation.Annotation;
 import com.mapbox.mapboxsdk.plugins.annotation.Circle;
 import com.mapbox.mapboxsdk.plugins.annotation.CircleManager;
+import com.mapbox.mapboxsdk.plugins.annotation.Fill;
+import com.mapbox.mapboxsdk.plugins.annotation.FillManager;
 import com.mapbox.mapboxsdk.plugins.annotation.OnAnnotationClickListener;
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
@@ -91,8 +107,12 @@ import static com.mapbox.mapboxgl.MapboxMapsPlugin.STARTED;
 import static com.mapbox.mapboxgl.MapboxMapsPlugin.STOPPED;
 
 import com.mapbox.mapboxsdk.plugins.localization.LocalizationPlugin;
+import com.mapbox.mapboxsdk.style.layers.CircleLayer;
 import com.mapbox.mapboxsdk.style.layers.Layer;
+import com.mapbox.mapboxsdk.style.layers.Property;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
+import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
+import com.mapbox.mapboxsdk.style.sources.Source;
 
 /**
  * Controller of a single MapboxMaps MapView instance.
@@ -338,6 +358,7 @@ final class MapboxMapController
             enableSymbolManager(style);
             enableCircleManager(style);
 
+
             Layer symbolLayer = style.getLayer("mapbox-android-symbol-layer-1");
             symbolLayer.setProperties(
                     PropertyFactory.iconSize(Expression.interpolate(
@@ -347,16 +368,29 @@ final class MapboxMapController
                     PropertyFactory.textSize(Expression.interpolate(
                             exponential(1.4), zoom(),
                             literal(0.0f), literal(0.0f),
-                            literal(14.5f), literal(0.0f),
-                            literal(14.6f), literal(10),
+                            literal(15.5f), literal(0.0f),
+                            literal(15.6f), literal(10),
                             literal(20.0f), literal(15))),
                     PropertyFactory.textFont(Expression.literal(new String[]{"Averta Semibold"}))
             );
 
+            style.addSource(new GeoJsonSource("range_source"));
+
+            Layer circleLayer = new CircleLayer("range_layer", "range_source").withProperties(
+                    PropertyFactory.circleColor(get("circle-color")),
+                    PropertyFactory.circleOpacity(get("circle-opacity")),
+                    PropertyFactory.circleStrokeOpacity(get("circle-stroke-opacity")),
+                    PropertyFactory.circleStrokeColor(get("circle-stroke-color")),
+                    PropertyFactory.circleStrokeWidth(get("circle-stroke-width")),
+                    PropertyFactory.circleRadius(Expression.interpolate(exponential(2), zoom(),
+                            literal(0.0f), literal(0.0f),
+                            literal(22), get("radius"))));
+            style.addLayer(circleLayer);
+
             if (myLocationEnabled) {
                 enableLocationComponent(style);
             }
-            // needs to be placed after SymbolManager#addClickListener,
+            // needs to be placed after SymbolManager#add#addClickListener,
             // is fixed with 0.6.0 of annotations plugin
             mapboxMap.addOnMapClickListener(MapboxMapController.this);
             mapboxMap.addOnMapLongClickListener(MapboxMapController.this);
@@ -418,6 +452,7 @@ final class MapboxMapController
 
     @Override
     public void onMethodCall(MethodCall call, MethodChannel.Result result) {
+
         switch (call.method) {
             case "map#waitForMap":
                 if (mapboxMap != null) {
@@ -580,6 +615,7 @@ final class MapboxMapController
                 break;
             }
             case "symbols#addAll": {
+                mapboxMap.triggerRepaint();
                 List<String> newSymbolIds = new ArrayList<String>();
                 final List<Object> options = call.argument("options");
                 List<SymbolOptions> symbolOptionsList = new ArrayList<SymbolOptions>();
@@ -696,6 +732,44 @@ final class MapboxMapController
                     resultList.add(hashMapLatLng);
                 }
                 result.success(resultList);
+                break;
+            }
+            case "neoRanges#update": {
+                Object visionRangeOptionsO = call.argument("visionRangeOptions");
+                final Map<?, ?> visionRangeOptions = toMap(visionRangeOptionsO);
+
+                Object adRangeOptionsO = call.argument("adRangeOptions");
+                final Map<?, ?> adRangeOptions = toMap(adRangeOptionsO);
+
+                Object actionRangeOptionsO = call.argument("actionRangeOptions");
+                final Map<?, ?> actionRangeOptions = toMap(actionRangeOptionsO);
+
+                final int visionRangeRadius = toInt(call.argument("visionRangeRadius"));
+                final int adRangeRadius = toInt(call.argument("adRangeRadius"));
+                final int actionRangeRadius = toInt(call.argument("actionRangeRadius"));
+
+                Style currentStyle = mapboxMap.getStyle();
+
+
+                if (visionRangeOptions != null &&
+                        adRangeOptions != null &&
+                        actionRangeOptions != null && currentStyle != null
+                ) {
+
+                    GeoJsonSource currentSource = (GeoJsonSource) currentStyle.getSource("range_source");
+
+                    if (currentSource != null) {
+                        Feature visionFeature = NeoCircleBuilder.createNeoCircleFeature(visionRangeOptions, visionRangeRadius);
+                        Feature adFeature = NeoCircleBuilder.createNeoCircleFeature(adRangeOptions, adRangeRadius);
+                        Feature actionFeature = NeoCircleBuilder.createNeoCircleFeature(actionRangeOptions, actionRangeRadius);
+
+                        List<Feature> featureList = Arrays.asList(visionFeature, adFeature, actionFeature);
+
+                        FeatureCollection featureCollection = FeatureCollection.fromFeatures(featureList);
+
+                        currentSource.setGeoJson(featureCollection);
+                    }
+                }
                 break;
             }
             case "circle#add": {

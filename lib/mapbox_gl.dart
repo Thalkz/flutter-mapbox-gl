@@ -31,10 +31,11 @@ export 'package:mapbox_gl_platform_interface/mapbox_gl_platform_interface.dart'
         CompassViewPosition,
         Circle,
         CircleOptions,
+        NeoRanges,
         Line,
         LineOptions;
 
 part 'src/bitmap.dart';
 part 'src/controller.dart';
-part 'src/mapbox_map.dart';
 part 'src/global.dart';
+part 'src/mapbox_map.dart';
