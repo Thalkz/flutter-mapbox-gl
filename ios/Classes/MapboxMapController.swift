@@ -549,6 +549,15 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         
         symbolLayer.setValue(NSExpression(forConstantValue: ["Averta Semibold"]), forKey: "textFontNames")
         
+        
+        let neoRangesSource = MGLSource(identifier:"neo_ranges_sources")
+        
+        style.addSource(neoRangesSource)
+         
+        let neoRangesCircleLayer = MGLCircleStyleLayer(identifier: "neo_ranges_layer", source: neoRangesSource);
+        
+        
+        
         // CUSTOM PART END
         
         mapReadyResult?(nil)
