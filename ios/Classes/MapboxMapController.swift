@@ -372,6 +372,40 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                 }
             }
             result(reply)
+            
+        case "neoRanges#update":
+              guard let arguments = methodCall.arguments as? [String: Any] else { return }
+              
+              guard let visionRangeOptions = arguments["visionRangeOptions"] as? [String: Any] else {return}
+              guard let adRangeOptions = arguments["adRangeOptions"] as? [String: Any] else {return}
+              guard let actionRangeOptions = arguments["visionRangeOptions"] as? [String: Any] else {return}
+              
+              guard let visionRangeRadius = arguments["visionRangeRadius"] as? Double else {return}
+              guard let adRangeRadius = arguments["adRangeRadius"] as? Double else {return}
+              guard let actionRangeRadius = arguments["actionRangeRadius"] as? Double else {return}
+              
+              
+              let style = mapView.style;
+              
+              
+              if (!visionRangeOptions.isEmpty &&  !adRangeOptions.isEmpty && !actionRangeOptions.isEmpty && style != nil) {
+               
+                guard let currentSource = style?.source(withIdentifier: "neo_ranges_sources") as? MGLShapesSource else {return}
+                
+                let visionFeature = NeoCircleBuilder.createNeoCircleFeature(options: visionRangeOptions, radius: visionRangeRadius)
+                let adFeature =  NeoCircleBuilder.createNeoCircleFeature(options: adRangeOptions, radius: adRangeRadius)
+                let actionFeature =  NeoCircleBuilder.createNeoCircleFeature(options: actionRangeOptions, radius: actionRangeRadius)
+                
+                var features = [MGLPointFeature]()
+                features.append(visionFeature)
+                features.append(adFeature)
+                features.append(actionFeature)
+                
+                currentSource.setFeatures(features, inTileAtX: 0, y: 0, zoomLevel: 0)
+              }
+              
+    
+            result(nil)
         case "style#addImage":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let name = arguments["name"] as? String else { return }
@@ -550,13 +584,25 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         symbolLayer.setValue(NSExpression(forConstantValue: ["Averta Semibold"]), forKey: "textFontNames")
         
         
-        let neoRangesSource = MGLSource(identifier:"neo_ranges_sources")
-        
+        let neoRangesSource = MGLComputedShapeSource(identifier:"neo_ranges_sources", options: nil)
+            
         style.addSource(neoRangesSource)
-         
+          
         let neoRangesCircleLayer = MGLCircleStyleLayer(identifier: "neo_ranges_layer", source: neoRangesSource);
         
+        let radiusStops = [
+                   0: NSExpression(forConstantValue: 0),
+                   22: NSExpression(forKeyPath: "radius"),
+               ]
         
+        neoRangesCircleLayer.circleColor = NSExpression(forKeyPath: "circle-color")
+        neoRangesCircleLayer.circleOpacity = NSExpression(forKeyPath: "circle-opacity")
+        neoRangesCircleLayer.circleStrokeOpacity = NSExpression(forKeyPath: "circle-stroke-opacity")
+        neoRangesCircleLayer.circleStrokeColor = NSExpression(forKeyPath: "circle-stroke-color")
+        neoRangesCircleLayer.circleStrokeWidth = NSExpression(forKeyPath: "circle-stroke-width")
+        neoRangesCircleLayer.circleRadius =  NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'exponential', 2, %@)", radiusStops)
+
+
         
         // CUSTOM PART END
         
