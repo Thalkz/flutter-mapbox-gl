@@ -16,11 +16,11 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     private var cameraTargetBounds: MGLCoordinateBounds?
     private var trackCameraPosition = false
     private var myLocationEnabled = false
-
+    
     private var symbolAnnotationController: MGLSymbolAnnotationController?
     private var circleAnnotationController: MGLCircleAnnotationController?
     private var lineAnnotationController: MGLLineAnnotationController?
-
+    
     func view() -> UIView {
         return mapView
     }
@@ -103,7 +103,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             result(nil)
         case "map#updateContentInsets":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
-
+            
             if let bounds = arguments["bounds"] as? [String: Any],
                 let top = bounds["top"] as? CGFloat,
                 let left = bounds["left"]  as? CGFloat,
@@ -178,7 +178,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             if let camera = Convert.parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) {
                 if let duration = arguments["duration"] as? TimeInterval {
                     mapView.setCamera(camera, withDuration: TimeInterval(duration / 1000), 
-                        animationTimingFunction: CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut))
+                                      animationTimingFunction: CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut))
                     result(nil)
                 }
                 mapView.setCamera(camera, animated: true)
@@ -187,7 +187,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         case "symbols#addAll":
             guard let symbolAnnotationController = symbolAnnotationController else { return }
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
-
+            
             if let options = arguments["options"] as? [[String: Any]] {
                 var symbols: [MGLSymbolStyleAnnotation] = [];
                 for o in options {
@@ -198,7 +198,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                 if !symbols.isEmpty {
                     symbolAnnotationController.addStyleAnnotations(symbols)
                 }
-
+                
                 result(symbols.map { $0.identifier })
             } else {
                 result(nil)
@@ -207,7 +207,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let symbolAnnotationController = symbolAnnotationController else { return }
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let symbolId = arguments["symbol"] as? String else { return }
-
+            
             for symbol in symbolAnnotationController.styleAnnotations(){
                 if symbol.identifier == symbolId {
                     Convert.interpretSymbolOptions(options: arguments["options"], delegate: symbol as! MGLSymbolStyleAnnotation)
@@ -226,7 +226,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let symbolIds = arguments["symbols"] as? [String] else { return }
             var symbols: [MGLSymbolStyleAnnotation] = [];
-
+            
             for symbol in symbolAnnotationController.styleAnnotations(){
                 if symbolIds.contains(symbol.identifier) {
                     symbols.append(symbol as! MGLSymbolStyleAnnotation)
@@ -238,7 +238,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let symbolAnnotationController = symbolAnnotationController else { return }
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let symbolId = arguments["symbol"] as? String else { return }
-
+            
             var reply: [String:Double]? = nil
             for symbol in symbolAnnotationController.styleAnnotations(){
                 if symbol.identifier == symbolId {
@@ -254,21 +254,21 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let symbolAnnotationController = symbolAnnotationController else { return }
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let iconAllowOverlap = arguments["iconAllowOverlap"] as? Bool else { return }
-
+            
             symbolAnnotationController.iconAllowsOverlap = iconAllowOverlap
             result(nil)
         case "symbolManager#iconIgnorePlacement":
             guard let symbolAnnotationController = symbolAnnotationController else { return }
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let iconIgnorePlacement = arguments["iconIgnorePlacement"] as? Bool else { return }
-
+            
             symbolAnnotationController.iconIgnoresPlacement = iconIgnorePlacement
             result(nil)
         case "symbolManager#textAllowOverlap":
             guard let symbolAnnotationController = symbolAnnotationController else { return }
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let textAllowOverlap = arguments["textAllowOverlap"] as? Bool else { return }
-
+            
             symbolAnnotationController.textAllowsOverlap = textAllowOverlap
             result(nil)
         case "symbolManager#textIgnorePlacement":
@@ -360,7 +360,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             guard let lineAnnotationController = lineAnnotationController else { return }
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let lineId = arguments["line"] as? String else { return }
-
+            
             var reply: [Any]? = nil
             for line in lineAnnotationController.styleAnnotations() {
                 if line.identifier == lineId {
@@ -374,23 +374,23 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             result(reply)
             
         case "neoRanges#update":
-              guard let arguments = methodCall.arguments as? [String: Any] else { return }
-              
-              guard let visionRangeOptions = arguments["visionRangeOptions"] as? [String: Any] else {return}
-              guard let adRangeOptions = arguments["adRangeOptions"] as? [String: Any] else {return}
-              guard let actionRangeOptions = arguments["visionRangeOptions"] as? [String: Any] else {return}
-              
-              guard let visionRangeRadius = arguments["visionRangeRadius"] as? Double else {return}
-              guard let adRangeRadius = arguments["adRangeRadius"] as? Double else {return}
-              guard let actionRangeRadius = arguments["actionRangeRadius"] as? Double else {return}
-              
-              
-              let style = mapView.style;
-              
-              
-              if (!visionRangeOptions.isEmpty &&  !adRangeOptions.isEmpty && !actionRangeOptions.isEmpty && style != nil) {
-               
-                guard let currentSource = style?.source(withIdentifier: "neo_ranges_sources") as? MGLShapesSource else {return}
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            
+            guard let visionRangeOptions = arguments["visionRangeOptions"] as? [String: Any] else {return}
+            guard let adRangeOptions = arguments["adRangeOptions"] as? [String: Any] else {return}
+            guard let actionRangeOptions = arguments["actionRangeOptions"] as? [String: Any] else {return}
+            
+            guard let visionRangeRadius = arguments["visionRangeRadius"] as? Double else {return}
+            guard let adRangeRadius = arguments["adRangeRadius"] as? Double else {return}
+            guard let actionRangeRadius = arguments["actionRangeRadius"] as? Double else {return}
+            
+            
+            let style = mapView.style;
+            
+            
+            if (!visionRangeOptions.isEmpty &&  !adRangeOptions.isEmpty && !actionRangeOptions.isEmpty && style != nil) {
+                
+                guard let currentSource = style?.source(withIdentifier: "neo_ranges_sources") as? MGLShapeSource else {return}
                 
                 let visionFeature = NeoCircleBuilder.createNeoCircleFeature(options: visionRangeOptions, radius: visionRangeRadius)
                 let adFeature =  NeoCircleBuilder.createNeoCircleFeature(options: adRangeOptions, radius: adRangeRadius)
@@ -401,10 +401,10 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                 features.append(adFeature)
                 features.append(actionFeature)
                 
-                currentSource.setFeatures(features, inTileAtX: 0, y: 0, zoomLevel: 0)
-              }
-              
-    
+                currentSource.shape = MGLShapeCollectionFeature.init(shapes: features)
+            }
+            
+            
             result(nil)
         case "style#addImage":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
@@ -440,7 +440,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         }
         return nil
     }
-
+    
     private func addIconImageToMap(iconImageName: String) {
         // Check if the image has already been added to the map.
         if self.mapView.style?.image(forName: iconImageName) == nil {
@@ -457,7 +457,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             }
         }
     }
-
+    
     private func updateMyLocationEnabled() {
         mapView.showsUserLocation = self.myLocationEnabled
     }
@@ -468,37 +468,37 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     }
     
     /*
-    *  UITapGestureRecognizer
-    *  On tap invoke the map#onMapClick callback.
-    */
+     *  UITapGestureRecognizer
+     *  On tap invoke the map#onMapClick callback.
+     */
     @objc @IBAction func handleMapTap(sender: UITapGestureRecognizer) {
         // Get the CGPoint where the user tapped.
         let point = sender.location(in: mapView)
         let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
         channel?.invokeMethod("map#onMapClick", arguments: [
-                      "x": point.x,
-                      "y": point.y,
-                      "lng": coordinate.longitude,
-                      "lat": coordinate.latitude,
-                  ])
+            "x": point.x,
+            "y": point.y,
+            "lng": coordinate.longitude,
+            "lat": coordinate.latitude,
+        ])
     }
     
     /*
-    *  UILongPressGestureRecognizer
-    *  After a long press invoke the map#onMapLongClick callback.
-    */
+     *  UILongPressGestureRecognizer
+     *  After a long press invoke the map#onMapLongClick callback.
+     */
     @objc @IBAction func handleMapLongPress(sender: UILongPressGestureRecognizer) {
         //Fire when the long press starts
         if (sender.state == .began) {
-          // Get the CGPoint where the user tapped.
+            // Get the CGPoint where the user tapped.
             let point = sender.location(in: mapView)
             let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
             channel?.invokeMethod("map#onMapLongClick", arguments: [
-                          "x": point.x,
-                          "y": point.y,
-                          "lng": coordinate.longitude,
-                          "lat": coordinate.latitude,
-                      ])
+                "x": point.x,
+                "y": point.y,
+                "lng": coordinate.longitude,
+                "lat": coordinate.latitude,
+            ])
         }
         
     }
@@ -542,11 +542,11 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             camera.pitch = initialTilt
             mapView.setCamera(camera, animated: false)
         }
-
+        
         lineAnnotationController = MGLLineAnnotationController(mapView: self.mapView)
         lineAnnotationController!.annotationsInteractionEnabled = true
         lineAnnotationController?.delegate = self
-
+        
         symbolAnnotationController = MGLSymbolAnnotationController(mapView: self.mapView)
         symbolAnnotationController!.annotationsInteractionEnabled = true
         symbolAnnotationController?.delegate = self
@@ -557,11 +557,12 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         
         
         // CUSTOM PART BEGIN
-        // It make symbols scale with zoom when no iconSize specified
+        // It make symbols scale with zoom when no iconSize specified and add a CircleLayer for NeoRanges
+        
         
         // Get symbol layer
         let symbolLayer = symbolAnnotationController!.layer;
-                
+        
         // Icon scale stops
         let iconScaleStops = [
             0:0,
@@ -575,34 +576,38 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             15.6:10,
             20:15
         ]
-    
+        
         // Update iconScale value with an expression
         symbolLayer.setValue(NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'exponential', 1.4, %@)", iconScaleStops), forKey: "iconScale")
-        
-         symbolLayer.setValue(NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'exponential', 1.4, %@)", textSizeStops), forKey: "textFontSize")
-        
+        symbolLayer.setValue(NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'exponential', 1.4, %@)", textSizeStops), forKey: "textFontSize")
         symbolLayer.setValue(NSExpression(forConstantValue: ["Averta Semibold"]), forKey: "textFontNames")
         
         
-        let neoRangesSource = MGLComputedShapeSource(identifier:"neo_ranges_sources", options: nil)
-            
+        // Create and add to the map a Source for NeoRanges with empty Features
+        let neoRangesSource = MGLShapeSource(identifier: "neo_ranges_sources", features: [MGLPointFeature]())
         style.addSource(neoRangesSource)
-          
-        let neoRangesCircleLayer = MGLCircleStyleLayer(identifier: "neo_ranges_layer", source: neoRangesSource);
+        
+        // Create and add to the map the NeoRanges CircleLayer with some properties
+        let neoRangesCircleLayer = MGLCircleStyleLayer.init(identifier: "neo_ranges_layer", source: neoRangesSource);
         
         let radiusStops = [
-                   0: NSExpression(forConstantValue: 0),
-                   22: NSExpression(forKeyPath: "radius"),
-               ]
+            0: NSExpression(forConstantValue: 0),
+            22: NSExpression(forKeyPath: "radius"),
+        ]
+        
+        let strokeWidthStops = [
+            0: NSExpression(forConstantValue: 0),
+            22: NSExpression(forKeyPath: "circle-stroke-width"),
+        ]
         
         neoRangesCircleLayer.circleColor = NSExpression(forKeyPath: "circle-color")
         neoRangesCircleLayer.circleOpacity = NSExpression(forKeyPath: "circle-opacity")
-        neoRangesCircleLayer.circleStrokeOpacity = NSExpression(forKeyPath: "circle-stroke-opacity")
         neoRangesCircleLayer.circleStrokeColor = NSExpression(forKeyPath: "circle-stroke-color")
-        neoRangesCircleLayer.circleStrokeWidth = NSExpression(forKeyPath: "circle-stroke-width")
+        neoRangesCircleLayer.circleStrokeWidth = NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'exponential', 2, %@)", strokeWidthStops)
         neoRangesCircleLayer.circleRadius =  NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'exponential', 2, %@)", radiusStops)
+        neoRangesCircleLayer.circlePitchAlignment =  NSExpression(forConstantValue: "map")
 
-
+        style.addLayer(neoRangesCircleLayer)
         
         // CUSTOM PART END
         
@@ -614,7 +619,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     
     func mapView(_ mapView: MGLMapView, shouldChangeFrom oldCamera: MGLMapCamera, to newCamera: MGLMapCamera) -> Bool {
         guard let bbox = cameraTargetBounds else { return true }
-                
+        
         // Get the current camera to restore it after.
         let currentCamera = mapView.camera
         
@@ -661,7 +666,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     // On tap invoke the symbol#onTap callback.
     func mapView(_ mapView: MGLMapView, didSelect annotation: MGLAnnotation) {
         
-       if let symbol = annotation as? Symbol {
+        if let symbol = annotation as? Symbol {
             channel?.invokeMethod("symbol#onTap", arguments: ["symbol" : "\(symbol.id)"])
         }
     }
@@ -670,7 +675,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     func mapView(_ mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
         return true
     }
-   
+    
     func mapView(_ mapView: MGLMapView, didChange mode: MGLUserTrackingMode, animated: Bool) {
         if let channel = channel {
             channel.invokeMethod("map#onCameraTrackingChanged", arguments: ["mode": mode.rawValue])
@@ -730,8 +735,8 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             NSLog("setStyleString - JSON style currently not supported")
         } else if (
             !styleString.hasPrefix("http://") && 
-            !styleString.hasPrefix("https://") && 
-            !styleString.hasPrefix("mapbox://")) {
+                !styleString.hasPrefix("https://") &&
+                !styleString.hasPrefix("mapbox://")) {
             // We are assuming that the style will be loaded from an asset here.
             let assetPath = registrar.lookupKey(forAsset: styleString)
             mapView.styleURL = URL(string: assetPath, relativeTo: Bundle.main.resourceURL)
