@@ -26,7 +26,7 @@ class NeoCircleBuilder {
 
         if (options.get("circleStrokeWidth") != null) {
             final float circleStrokeWidth = Convert.toFloat(options.get("circleStrokeWidth"));
-            feature.addNumberProperty("circle-stroke-width", circleStrokeWidth);
+            feature.addNumberProperty("circle-stroke-width", circleStrokeWidth * 18);
         }
 
         if (options.get("circleStrokeColor") != null) {

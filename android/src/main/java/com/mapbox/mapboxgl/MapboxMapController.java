@@ -358,6 +358,7 @@ final class MapboxMapController
             enableSymbolManager(style);
             enableCircleManager(style);
 
+            // CUSTOM PART BEGIN
 
             Layer symbolLayer = style.getLayer("mapbox-android-symbol-layer-1");
             symbolLayer.setProperties(
@@ -381,11 +382,16 @@ final class MapboxMapController
                     PropertyFactory.circleOpacity(get("circle-opacity")),
                     PropertyFactory.circleStrokeOpacity(get("circle-stroke-opacity")),
                     PropertyFactory.circleStrokeColor(get("circle-stroke-color")),
-                    PropertyFactory.circleStrokeWidth(get("circle-stroke-width")),
+                    PropertyFactory.circlePitchAlignment(Expression.literal("map")),
+                    PropertyFactory.circleStrokeWidth(Expression.interpolate(exponential(2), zoom(),
+                            literal(0.0f), literal(0.0f),
+                            literal(22), get("circle-stroke-width"))),
                     PropertyFactory.circleRadius(Expression.interpolate(exponential(2), zoom(),
                             literal(0.0f), literal(0.0f),
                             literal(22), get("radius"))));
             style.addLayer(circleLayer);
+
+            // CUSTOM PART END
 
             if (myLocationEnabled) {
                 enableLocationComponent(style);
