@@ -20,7 +20,7 @@ class NeoCircleBuilder {
         newFeature.coordinate = CLLocationCoordinate2DMake(lat, lon)
         
         newFeature.attributes = [
-            "radius": radius * 18,
+            "radius": radius * 75,
             "circle-color": circleColor,
             "circle-opacity": circleOpacity,
             "circle-stroke-color": circleStrokeColor,

@@ -543,6 +543,33 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             mapView.setCamera(camera, animated: false)
         }
         
+        // Create and add to the map a Source for NeoRanges with empty Features
+                     let neoRangesSource = MGLShapeSource(identifier: "neo_ranges_sources", features: [MGLPointFeature]())
+                     style.addSource(neoRangesSource)
+                     
+                     // Create and add to the map the NeoRanges CircleLayer with some properties
+                     let neoRangesCircleLayer = MGLCircleStyleLayer.init(identifier: "neo_ranges_layer", source: neoRangesSource);
+                     
+                     let radiusStops = [
+                         0: NSExpression(forConstantValue: 0),
+                         22: NSExpression(forKeyPath: "radius"),
+                     ]
+                     
+                     let strokeWidthStops = [
+                         0: NSExpression(forConstantValue: 0),
+                         22: NSExpression(forKeyPath: "circle-stroke-width"),
+                     ]
+                     
+                     neoRangesCircleLayer.circleColor = NSExpression(forKeyPath: "circle-color")
+                     neoRangesCircleLayer.circleOpacity = NSExpression(forKeyPath: "circle-opacity")
+                     neoRangesCircleLayer.circleStrokeColor = NSExpression(forKeyPath: "circle-stroke-color")
+                     neoRangesCircleLayer.circleStrokeWidth = NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'exponential', 2, %@)", strokeWidthStops)
+                     neoRangesCircleLayer.circleRadius =  NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'exponential', 2, %@)", radiusStops)
+                     neoRangesCircleLayer.circlePitchAlignment =  NSExpression(forConstantValue: "map")
+
+                     style.addLayer(neoRangesCircleLayer)
+               
+        
         lineAnnotationController = MGLLineAnnotationController(mapView: self.mapView)
         lineAnnotationController!.annotationsInteractionEnabled = true
         lineAnnotationController?.delegate = self
@@ -559,6 +586,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         // CUSTOM PART BEGIN
         // It make symbols scale with zoom when no iconSize specified and add a CircleLayer for NeoRanges
         
+    
         
         // Get symbol layer
         let symbolLayer = symbolAnnotationController!.layer;
@@ -566,7 +594,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         // Icon scale stops
         let iconScaleStops = [
             0:0,
-            20:2.5
+            20:2
         ]
         
         // Icon scale stops
@@ -583,31 +611,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         symbolLayer.setValue(NSExpression(forConstantValue: ["Averta Semibold"]), forKey: "textFontNames")
         
         
-        // Create and add to the map a Source for NeoRanges with empty Features
-        let neoRangesSource = MGLShapeSource(identifier: "neo_ranges_sources", features: [MGLPointFeature]())
-        style.addSource(neoRangesSource)
-        
-        // Create and add to the map the NeoRanges CircleLayer with some properties
-        let neoRangesCircleLayer = MGLCircleStyleLayer.init(identifier: "neo_ranges_layer", source: neoRangesSource);
-        
-        let radiusStops = [
-            0: NSExpression(forConstantValue: 0),
-            22: NSExpression(forKeyPath: "radius"),
-        ]
-        
-        let strokeWidthStops = [
-            0: NSExpression(forConstantValue: 0),
-            22: NSExpression(forKeyPath: "circle-stroke-width"),
-        ]
-        
-        neoRangesCircleLayer.circleColor = NSExpression(forKeyPath: "circle-color")
-        neoRangesCircleLayer.circleOpacity = NSExpression(forKeyPath: "circle-opacity")
-        neoRangesCircleLayer.circleStrokeColor = NSExpression(forKeyPath: "circle-stroke-color")
-        neoRangesCircleLayer.circleStrokeWidth = NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'exponential', 2, %@)", strokeWidthStops)
-        neoRangesCircleLayer.circleRadius =  NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'exponential', 2, %@)", radiusStops)
-        neoRangesCircleLayer.circlePitchAlignment =  NSExpression(forConstantValue: "map")
-
-        style.addLayer(neoRangesCircleLayer)
+    
         
         // CUSTOM PART END
         

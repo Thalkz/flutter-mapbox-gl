@@ -354,6 +354,23 @@ final class MapboxMapController
         @Override
         public void onStyleLoaded(@NonNull Style style) {
             MapboxMapController.this.style = style;
+
+            style.addSource(new GeoJsonSource("range_source"));
+
+            Layer circleLayer = new CircleLayer("range_layer", "range_source").withProperties(
+                    PropertyFactory.circleColor(get("circle-color")),
+                    PropertyFactory.circleOpacity(get("circle-opacity")),
+                    PropertyFactory.circleStrokeOpacity(get("circle-stroke-opacity")),
+                    PropertyFactory.circleStrokeColor(get("circle-stroke-color")),
+                    PropertyFactory.circlePitchAlignment(Expression.literal("map")),
+                    PropertyFactory.circleStrokeWidth(Expression.interpolate(exponential(2), zoom(),
+                            literal(0.0f), literal(0.0f),
+                            literal(22), get("circle-stroke-width"))),
+                    PropertyFactory.circleRadius(Expression.interpolate(exponential(2), zoom(),
+                            literal(0.0f), literal(0.0f),
+                            literal(22), get("radius"))));
+            style.addLayer(circleLayer);
+
             enableLineManager(style);
             enableSymbolManager(style);
             enableCircleManager(style);
@@ -374,22 +391,6 @@ final class MapboxMapController
                             literal(20.0f), literal(15))),
                     PropertyFactory.textFont(Expression.literal(new String[]{"Averta Semibold"}))
             );
-
-            style.addSource(new GeoJsonSource("range_source"));
-
-            Layer circleLayer = new CircleLayer("range_layer", "range_source").withProperties(
-                    PropertyFactory.circleColor(get("circle-color")),
-                    PropertyFactory.circleOpacity(get("circle-opacity")),
-                    PropertyFactory.circleStrokeOpacity(get("circle-stroke-opacity")),
-                    PropertyFactory.circleStrokeColor(get("circle-stroke-color")),
-                    PropertyFactory.circlePitchAlignment(Expression.literal("map")),
-                    PropertyFactory.circleStrokeWidth(Expression.interpolate(exponential(2), zoom(),
-                            literal(0.0f), literal(0.0f),
-                            literal(22), get("circle-stroke-width"))),
-                    PropertyFactory.circleRadius(Expression.interpolate(exponential(2), zoom(),
-                            literal(0.0f), literal(0.0f),
-                            literal(22), get("radius"))));
-            style.addLayer(circleLayer);
 
             // CUSTOM PART END
 

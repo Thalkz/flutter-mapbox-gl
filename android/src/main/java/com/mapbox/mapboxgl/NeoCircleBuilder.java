@@ -39,7 +39,7 @@ class NeoCircleBuilder {
             feature.addNumberProperty("circle-stroke-opacity", circleStrokeOpacity);
         }
 
-        feature.addNumberProperty("radius", radius * 18);
+        feature.addNumberProperty("radius", radius * 75);
 
         return feature;
     }
