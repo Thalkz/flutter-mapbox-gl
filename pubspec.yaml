@@ -7,7 +7,10 @@ dependencies:
   flutter:
     sdk: flutter
   mapbox_gl_platform_interface:
-    path: mapbox_gl_platform_interface
+    git:
+      url: git@github.com:revoltgames/neopolis_mapbox.git
+      ref: feature/upgrade_lib
+      path: mapbox_gl_platform_interface
 
 flutter:
   plugin:
