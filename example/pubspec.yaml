@@ -1,6 +1,7 @@
 name: mapbox_gl_example
 description: Demonstrates how to use the mapbox_gl plugin.
 publish_to: 'none'
+version: 1.0.0+1
 
 environment:
   sdk: ">=2.0.0-dev.68.0 <3.0.0"
@@ -13,11 +14,14 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
   location: ^2.5.3
+  path_provider: ^1.6.27
   http:
 
 dependency_overrides:
   mapbox_gl_platform_interface:
     path: ../mapbox_gl_platform_interface
+  mapbox_gl_web:
+    path: ../mapbox_gl_web
 
 dev_dependencies:
   flutter_test:
@@ -46,10 +50,12 @@ flutter:
   # https://flutter.io/assets-and-images/#resolution-aware.
 
   assets:
+    - assets/fill/cat_silhouette_pattern.png
     - assets/symbols/custom-icon.png
     - assets/symbols/2.0x/custom-icon.png
     - assets/symbols/3.0x/custom-icon.png
     - assets/style.json
+    - assets/sydney.png
 
   # For details regarding adding assets from package dependencies, see
   # https://flutter.io/assets-and-images/#from-packages
