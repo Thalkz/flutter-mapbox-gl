@@ -4,8 +4,7 @@
 
 part of mapbox_gl;
 
-final MethodChannel _globalChannel =
-    MethodChannel('plugins.flutter.io/mapbox_gl');
+final MethodChannel _globalChannel = MethodChannel('plugins.flutter.io/mapbox_gl');
 
 /// Copy tiles db file passed in to the tiles cache directory (sideloaded) to
 /// make tiles available offline.
@@ -18,115 +17,10 @@ Future<void> installOfflineMapTiles(String tilesDb) async {
   );
 }
 
-Future<List<OfflineRegion>> mergeOfflineRegions(
-  String path, {
-  String accessToken,
-}) async {
-  String regionsJson = await _globalChannel.invokeMethod(
-    'mergeOfflineRegions',
-    <String, dynamic>{
-      'path': path,
-      'accessToken': accessToken,
-    },
-  );
-  Iterable regions = json.decode(regionsJson);
-  return regions.map((region) => OfflineRegion.fromJson(region)).toList();
-}
-
-Future<List<OfflineRegion>> getListOfRegions({String accessToken}) async {
-  String regionsJson = await _globalChannel.invokeMethod(
-    'getListOfRegions',
-    <String, dynamic>{
-      'accessToken': accessToken,
-    },
-  );
-  Iterable regions = json.decode(regionsJson);
-  return regions.map((region) => OfflineRegion.fromJson(region)).toList();
-}
-
-Future<OfflineRegion> updateOfflineRegionMetadata(
-    int id, Map<String, dynamic> metadata,
-    {String accessToken}) async {
-  final regionJson = await _globalChannel.invokeMethod(
-    'updateOfflineRegionMetadata',
-    <String, dynamic>{
-      'id': id,
-      'accessToken': accessToken,
-      'metadata': metadata,
-    },
-  );
-
-  return OfflineRegion.fromJson(json.decode(regionJson));
-}
-
-Future<dynamic> deleteOfflineRegion(int id, {String accessToken}) =>
-    _globalChannel.invokeMethod(
+Future<dynamic> deleteOfflineRegion(int id, {String accessToken}) => _globalChannel.invokeMethod(
       'deleteOfflineRegion',
       <String, dynamic>{
         'id': id,
         'accessToken': accessToken,
       },
     );
-
-Future<dynamic> downloadOfflineRegion(
-  OfflineRegion region, {
-  String accessToken,
-  Function(DownloadRegionStatus event) onEvent,
-}) {
-  String channelName =
-      'downloadOfflineRegion_${DateTime.now().microsecondsSinceEpoch}';
-
-  final result =
-      _globalChannel.invokeMethod('downloadOfflineRegion', <String, dynamic>{
-    'accessToken': accessToken,
-    'channelName': channelName,
-    'region': json.encode(region._toJson())
-  });
-
-  if (onEvent != null) {
-    EventChannel(channelName).receiveBroadcastStream().handleError((error) {
-      if (error is PlatformException) {
-        onEvent(Error(error));
-        return Error(error);
-      }
-      var unknownError = Error(
-        PlatformException(
-          code: 'UnknowException',
-          message:
-              'This error is unhandled by plugin. Please contact us if needed.',
-          details: error,
-        ),
-      );
-      onEvent(unknownError);
-      return unknownError;
-    }).listen((data) {
-      final Map<String, dynamic> jsonData = json.decode(data);
-      DownloadRegionStatus status;
-      switch (jsonData['status']) {
-        case 'start':
-          status = InProgress(0.0);
-          break;
-        case 'progress':
-          final dynamic value = jsonData['progress'];
-          double progress = 0.0;
-
-          if (value is int) {
-            progress = value.toDouble();
-          }
-
-          if (value is double) {
-            progress = value;
-          }
-
-          status = InProgress(progress);
-          break;
-        case 'success':
-          status = Success();
-          break;
-      }
-      onEvent(status ?? (throw 'Invalid event status ${jsonData['status']}'));
-    });
-  }
-
-  return result;
-}

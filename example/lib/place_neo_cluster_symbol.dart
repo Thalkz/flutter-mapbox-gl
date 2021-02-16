@@ -14,8 +14,8 @@ import 'package:mapbox_gl/mapbox_gl.dart';
 import 'main.dart';
 import 'page.dart';
 
-class PlaceSymbolPage extends ExamplePage {
-  PlaceSymbolPage() : super(const Icon(Icons.place), 'Place symbol');
+class PlaceNeoClusterSymbolPage extends ExamplePage {
+  PlaceNeoClusterSymbolPage() : super(const Icon(Icons.place), 'Place NeoCluster symbol');
 
   @override
   Widget build(BuildContext context) {
@@ -86,14 +86,15 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   void _updateSelectedSymbol(SymbolOptions changes) {
-    controller.updateSymbol(_selectedSymbol, changes);
+    controller.updateNeoClusterSymbol(_selectedSymbol, changes);
   }
 
   void _add(String iconImage) {
     List<int> availableNumbers = Iterable<int>.generate(12).toList();
     controller.symbols.forEach((s) => availableNumbers.removeWhere((i) => i == s.data['count']));
     if (availableNumbers.isNotEmpty) {
-      controller.addSymbol(_getSymbolOptions(iconImage, availableNumbers.first), {'count': availableNumbers.first});
+      controller
+          .addNeoClusterSymbol(_getSymbolOptions(iconImage, availableNumbers.first), {'count': availableNumbers.first});
       setState(() {
         _symbolCount += 1;
       });
@@ -118,7 +119,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     if (symbolsToAddNumbers.isNotEmpty) {
       final List<SymbolOptions> symbolOptionsList =
           symbolsToAddNumbers.map((i) => _getSymbolOptions(iconImage, i)).toList();
-      controller.addSymbols(symbolOptionsList, symbolsToAddNumbers.map((i) => {'count': i}).toList());
+      controller.addNeoClusterSymbols(symbolOptionsList, symbolsToAddNumbers.map((i) => {'count': i}).toList());
 
       setState(() {
         _symbolCount += symbolOptionsList.length;
@@ -127,7 +128,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   void _remove() {
-    controller.removeSymbol(_selectedSymbol);
+    controller.removeNeoClusterSymbol(_selectedSymbol);
     setState(() {
       _selectedSymbol = null;
       _symbolCount -= 1;
@@ -135,7 +136,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   void _removeAll() {
-    controller.removeSymbols(controller.symbols);
+    controller.removeNeoClusterSymbols(controller.symbols);
     setState(() {
       _selectedSymbol = null;
       _symbolCount = 0;

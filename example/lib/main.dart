@@ -6,20 +6,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:mapbox_gl_example/full_map.dart';
-import 'package:mapbox_gl_example/offline_regions.dart';
+import 'package:mapbox_gl_example/place_neo_cluster_symbol.dart';
+import 'package:mapbox_gl_example/place_neo_ranges.dart';
 
 import 'animate_camera.dart';
-import 'annotation_order_maps.dart';
 import 'full_map.dart';
 import 'line.dart';
-import 'local_style.dart';
 import 'map_ui.dart';
 import 'move_camera.dart';
 import 'page.dart';
 import 'place_circle.dart';
-import 'place_source.dart';
 import 'place_symbol.dart';
-import 'place_fill.dart';
 import 'scrolling_map.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
@@ -28,19 +25,16 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   AnimateCameraPage(),
   MoveCameraPage(),
   PlaceSymbolPage(),
-  PlaceSourcePage(),
   LinePage(),
-  LocalStylePage(),
   PlaceCirclePage(),
-  PlaceFillPage(),
   ScrollingMapPage(),
-  OfflineRegionsPage(),
-  AnnotationOrderPage(),
+  PlaceNeoRangesPage(),
+  PlaceNeoClusterSymbolPage(),
 ];
 
 class MapsDemo extends StatelessWidget {
-  //FIXME: Add your Mapbox access token here
-  static const String ACCESS_TOKEN = "YOUR_TOKEN_HERE";
+  static const String ACCESS_TOKEN =
+      "pk.eyJ1IjoiamdyYW5kY2hhdmluIiwiYSI6ImNqbWpmNHNobDBmM2EzcG56cnZ0d2t5OHUifQ.dTywOBGhAeBeH3UgDVBEjQ";
 
   void _pushPage(BuildContext context, ExamplePage page) async {
     if (!kIsWeb) {
