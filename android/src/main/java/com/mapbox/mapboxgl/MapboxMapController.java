@@ -5,13 +5,10 @@
 package com.mapbox.mapboxgl;
 
 import android.Manifest;
-import android.app.Activity;
-import android.app.Application;
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
@@ -25,7 +22,9 @@ import android.view.Gravity;
 import android.view.View;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
+import androidx.lifecycle.DefaultLifecycleObserver;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -78,26 +77,17 @@ import com.mapbox.mapboxsdk.style.sources.ImageSource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
+import java.util.ArrayList;
 
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.platform.PlatformView;
 
 import static com.mapbox.mapboxgl.Convert.toMap;
-import static com.mapbox.mapboxgl.MapboxMapsPlugin.CREATED;
-import static com.mapbox.mapboxgl.MapboxMapsPlugin.DESTROYED;
-import static com.mapbox.mapboxgl.MapboxMapsPlugin.PAUSED;
-import static com.mapbox.mapboxgl.MapboxMapsPlugin.RESUMED;
-import static com.mapbox.mapboxgl.MapboxMapsPlugin.STARTED;
-import static com.mapbox.mapboxgl.MapboxMapsPlugin.STOPPED;
 import static com.mapbox.mapboxgl.NeoCircleBuilder.createNeoCircleFeature;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.exponential;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.get;
@@ -112,8 +102,9 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineWidth;
 /**
  * Controller of a single MapboxMaps MapView instance.
  */
+@SuppressLint("MissingPermission")
 final class MapboxMapController
-        implements Application.ActivityLifecycleCallbacks,
+        implements DefaultLifecycleObserver,
         MapboxMap.OnCameraIdleListener,
         MapboxMap.OnCameraMoveListener,
         MapboxMap.OnCameraMoveStartedListener,
@@ -131,10 +122,9 @@ final class MapboxMapController
         PlatformView {
     private static final String TAG = "MapboxMapController";
     private final int id;
-    private final AtomicInteger activityState;
     private final MethodChannel methodChannel;
-    private final PluginRegistry.Registrar registrar;
-    private final MapView mapView;
+    private final MapboxMapsPlugin.LifecycleProvider lifecycleProvider;
+    private MapView mapView;
     private MapboxMap mapboxMap;
     private final Map<String, SymbolController> symbols;
     private final Map<String, SymbolController> neoClusterSymbols;
@@ -153,7 +143,6 @@ final class MapboxMapController
     private boolean disposed = false;
     private final float density;
     private MethodChannel.Result mapReadyResult;
-    private final int registrarActivityHashCode;
     private final Context context;
     private final String styleStringInitial;
     private LocationComponent locationComponent = null;
@@ -161,20 +150,20 @@ final class MapboxMapController
     private LocationEngineCallback<LocationEngineResult> locationEngineCallback = null;
     private LocalizationPlugin localizationPlugin;
     private Style style;
+    private List<String> annotationOrder = new ArrayList();
 
     MapboxMapController(
             int id,
             Context context,
-            AtomicInteger activityState,
-            PluginRegistry.Registrar registrar,
+            BinaryMessenger messenger,
+            MapboxMapsPlugin.LifecycleProvider lifecycleProvider,
             MapboxMapOptions options,
             String accessToken,
-            String styleStringInitial) {
-        Mapbox.getInstance(context, accessToken != null ? accessToken : getAccessToken(context));
+            String styleStringInitial,
+            List<String> annotationOrder) {
+        MapBoxUtils.getMapbox(context, accessToken);
         this.id = id;
         this.context = context;
-        this.activityState = activityState;
-        this.registrar = registrar;
         this.styleStringInitial = styleStringInitial;
         this.mapView = new MapView(context, options);
         this.symbols = new HashMap<>();
@@ -183,71 +172,19 @@ final class MapboxMapController
         this.circles = new HashMap<>();
         this.fills = new HashMap<>();
         this.density = context.getResources().getDisplayMetrics().density;
-        methodChannel =
-                new MethodChannel(registrar.messenger(), "plugins.flutter.io/mapbox_maps_" + id);
+        this.lifecycleProvider = lifecycleProvider;
+        methodChannel = new MethodChannel(messenger, "plugins.flutter.io/mapbox_maps_" + id);
         methodChannel.setMethodCallHandler(this);
-        this.registrarActivityHashCode = registrar.activity().hashCode();
+        this.annotationOrder = annotationOrder;
     }
 
-    private static String getAccessToken(@NonNull Context context) {
-        try {
-            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            Bundle bundle = ai.metaData;
-            String token = bundle.getString("com.mapbox.token");
-            if (token == null || token.isEmpty()) {
-                throw new NullPointerException();
-            }
-            return token;
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to find an Access Token in the Application meta-data. Maps may not load correctly. " +
-                    "Please refer to the installation guide at https://github.com/tobrun/flutter-mapbox-gl#mapbox-access-token " +
-                    "for troubleshooting advice." + e.getMessage());
-        }
-        return null;
-    }
-
+    @Override
     public View getView() {
         return mapView;
     }
 
     void init() {
-        switch (activityState.get()) {
-            case STOPPED:
-                mapView.onCreate(null);
-                mapView.onStart();
-                mapView.onResume();
-                mapView.onPause();
-                mapView.onStop();
-                break;
-            case PAUSED:
-                mapView.onCreate(null);
-                mapView.onStart();
-                mapView.onResume();
-                mapView.onPause();
-                break;
-            case RESUMED:
-                mapView.onCreate(null);
-                mapView.onStart();
-                mapView.onResume();
-                break;
-            case STARTED:
-                mapView.onCreate(null);
-                mapView.onStart();
-                break;
-            case CREATED:
-                mapView.onCreate(null);
-                break;
-            case DESTROYED:
-                mapboxMap.removeOnCameraIdleListener(this);
-                mapboxMap.removeOnCameraMoveStartedListener(this);
-                mapboxMap.removeOnCameraMoveListener(this);
-                mapView.onDestroy();
-                break;
-            default:
-                throw new IllegalArgumentException(
-                        "Cannot interpret " + activityState.get() + " as an activity state");
-        }
-        registrar.activity().getApplication().registerActivityLifecycleCallbacks(this);
+        lifecycleProvider.getLifecycle().addObserver(this);
         mapView.getMapAsync(this);
     }
 
@@ -265,14 +202,6 @@ final class MapboxMapController
 
     private SymbolController symbol(String symbolId) {
         final SymbolController symbol = symbols.get(symbolId);
-        if (symbol == null) {
-            throw new IllegalArgumentException("Unknown symbol: " + symbolId);
-        }
-        return symbol;
-    }
-
-    private SymbolController neoClusterSymbol(String symbolId) {
-        final SymbolController symbol = neoClusterSymbols.get(symbolId);
         if (symbol == null) {
             throw new IllegalArgumentException("Unknown symbol: " + symbolId);
         }
@@ -336,6 +265,14 @@ final class MapboxMapController
         return fill;
     }
 
+    private SymbolController neoClusterSymbol(String symbolId) {
+        final SymbolController symbol = neoClusterSymbols.get(symbolId);
+        if (symbol == null) {
+            throw new IllegalArgumentException("Unknown symbol: " + symbolId);
+        }
+        return symbol;
+    }
+
     @Override
     public void onMapReady(MapboxMap mapboxMap) {
         this.mapboxMap = mapboxMap;
@@ -361,21 +298,23 @@ final class MapboxMapController
 
     @Override
     public void setStyleString(String styleString) {
-        //check if json, url or plain string:
+        // Check if json, url, absolute path or asset path:
         if (styleString == null || styleString.isEmpty()) {
             Log.e(TAG, "setStyleString - string empty or null");
         } else if (styleString.startsWith("{") || styleString.startsWith("[")) {
             mapboxMap.setStyle(new Style.Builder().fromJson(styleString), onStyleLoadedCallback);
+        } else if (styleString.startsWith("/")) {
+            // Absolute path
+            mapboxMap.setStyle(new Style.Builder().fromUri("file://" + styleString), onStyleLoadedCallback);
         } else if (
                 !styleString.startsWith("http://") &&
                         !styleString.startsWith("https://") &&
                         !styleString.startsWith("mapbox://")) {
             // We are assuming that the style will be loaded from an asset here.
-            AssetManager assetManager = registrar.context().getAssets();
-            String key = registrar.lookupKeyForAsset(styleString);
+            String key = MapboxMapsPlugin.flutterAssets.getAssetFilePathByName(styleString);
             mapboxMap.setStyle(new Style.Builder().fromUri("asset://" + key), onStyleLoadedCallback);
         } else {
-            mapboxMap.setStyle(new Style.Builder().fromUrl(styleString), onStyleLoadedCallback);
+            mapboxMap.setStyle(new Style.Builder().fromUri(styleString), onStyleLoadedCallback);
         }
     }
 
@@ -404,15 +343,30 @@ final class MapboxMapController
             style.addLayer(rangesLayer);
             style.addLayer(lineLayer);
 
-            enableLineManager(style);
-            enableSymbolManager(style);
-            enableCircleManager(style);
-            enableFillManager(style);
+
+            for (String annotationType : annotationOrder) {
+                switch (annotationType) {
+                    case "AnnotationType.fill":
+                        enableFillManager(style);
+                        break;
+                    case "AnnotationType.line":
+                        enableLineManager(style);
+                        break;
+                    case "AnnotationType.circle":
+                        enableCircleManager(style);
+                        break;
+                    case "AnnotationType.symbol":
+                        enableSymbolManager(style);
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unknown annotation type: " + annotationType + ", must be either 'fill', 'line', 'circle' or 'symbol'");
+                }
+            }
+
             enableNeoClusterSymbolManager(style);
 
             Layer symbolLayer = style.getLayer(symbolManager.getLayerId());
 
-//            if (symbolLayer != null) {
             symbolLayer.setProperties(
                     PropertyFactory.iconSize(Expression.interpolate(
                             exponential(1.4), zoom(),
@@ -426,14 +380,13 @@ final class MapboxMapController
                             literal(20.0f), literal(15))),
                     PropertyFactory.textFont(literal(new String[]{"Averta Semibold"}))
             );
-//            }
 
             Layer neoClusterSymbolLayer = style.getLayer(neoClusterSymbolManager.getLayerId());
             neoClusterSymbolLayer.setProperties(
                     PropertyFactory.textFont(literal(new String[]{"Averta Bold"}))
             );
-            // CUSTOM PART END
 
+            // CUSTOM PART END
 
             if (myLocationEnabled) {
                 enableLocationComponent(style);
@@ -471,7 +424,6 @@ final class MapboxMapController
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     private void onUserLocationUpdate(Location location) {
         if (location == null) {
             return;
@@ -482,7 +434,9 @@ final class MapboxMapController
         userLocation.put("altitude", location.getAltitude());
         userLocation.put("bearing", location.getBearing());
         userLocation.put("horizontalAccuracy", location.getAccuracy());
-        userLocation.put("verticalAccuracy", (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? location.getVerticalAccuracyMeters() : null);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            userLocation.put("verticalAccuracy", (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? location.getVerticalAccuracyMeters() : null);
+        }
         userLocation.put("timestamp", location.getTime());
 
         final Map<String, Object> arguments = new HashMap<>(1);
@@ -522,6 +476,7 @@ final class MapboxMapController
             fillManager.addClickListener(MapboxMapController.this::onAnnotationClick);
         }
     }
+
 
     private void enableNeoClusterSymbolManager(@NonNull Style style) {
         if (neoClusterSymbolManager == null) {
@@ -1037,7 +992,7 @@ final class MapboxMapController
                     result.error("STYLE IS NULL", "The style is null. Has onStyleLoaded() already been invoked?", null);
                 }
                 List<LatLng> coordinates = Convert.toLatLngList(call.argument("coordinates"));
-                style.addSource(new ImageSource(call.argument("name"), new LatLngQuad(coordinates.get(0), coordinates.get(1), coordinates.get(2), coordinates.get(3)), BitmapFactory.decodeByteArray(call.argument("bytes"), 0, call.argument("length"))));
+                style.addSource(new ImageSource(call.argument("imageSourceId"), new LatLngQuad(coordinates.get(0), coordinates.get(1), coordinates.get(2), coordinates.get(3)), BitmapFactory.decodeByteArray(call.argument("bytes"), 0, call.argument("length"))));
                 result.success(null);
                 break;
             }
@@ -1045,7 +1000,7 @@ final class MapboxMapController
                 if (style == null) {
                     result.error("STYLE IS NULL", "The style is null. Has onStyleLoaded() already been invoked?", null);
                 }
-                style.removeSource((String) call.argument("name"));
+                style.removeSource((String) call.argument("imageSourceId"));
                 result.success(null);
                 break;
             }
@@ -1053,7 +1008,15 @@ final class MapboxMapController
                 if (style == null) {
                     result.error("STYLE IS NULL", "The style is null. Has onStyleLoaded() already been invoked?", null);
                 }
-                style.addLayer(new RasterLayer(call.argument("name"), call.argument("sourceId")));
+                style.addLayer(new RasterLayer(call.argument("imageLayerId"), call.argument("imageSourceId")));
+                result.success(null);
+                break;
+            }
+            case "style#addLayerBelow": {
+                if (style == null) {
+                    result.error("STYLE IS NULL", "The style is null. Has onStyleLoaded() already been invoked?", null);
+                }
+                style.addLayerBelow(new RasterLayer(call.argument("imageLayerId"), call.argument("imageSourceId")), call.argument("belowLayerId"));
                 result.success(null);
                 break;
             }
@@ -1061,7 +1024,7 @@ final class MapboxMapController
                 if (style == null) {
                     result.error("STYLE IS NULL", "The style is null. Has onStyleLoaded() already been invoked?", null);
                 }
-                style.removeLayer((String) call.argument("name"));
+                style.removeLayer((String) call.argument("imageLayerId"));
                 result.success(null);
                 break;
             }
@@ -1090,7 +1053,11 @@ final class MapboxMapController
 
     @Override
     public void onCameraIdle() {
-        methodChannel.invokeMethod("camera#onIdle", Collections.singletonMap("map", id));
+        final Map<String, Object> arguments = new HashMap<>(2);
+        if (trackCameraPosition) {
+            arguments.put("position", Convert.toJson(mapboxMap.getCameraPosition()));
+        }
+        methodChannel.invokeMethod("camera#onIdle", arguments);
     }
 
     @Override
@@ -1195,10 +1162,23 @@ final class MapboxMapController
 
     @Override
     public void dispose() {
-        if (disposed || registrar.activity() == null) {
+        if (disposed) {
             return;
         }
         disposed = true;
+        methodChannel.setMethodCallHandler(null);
+        destroyMapViewIfNecessary();
+        Lifecycle lifecycle = lifecycleProvider.getLifecycle();
+        if (lifecycle != null) {
+            lifecycle.removeObserver(this);
+        }
+    }
+
+    private void destroyMapViewIfNecessary() {
+        if (mapView == null) {
+            return;
+        }
+
         if (locationComponent != null) {
             locationComponent.setLocationComponentEnabled(false);
         }
@@ -1215,29 +1195,30 @@ final class MapboxMapController
             fillManager.onDestroy();
         }
         stopListeningForLocationUpdates();
+
         mapView.onDestroy();
-        registrar.activity().getApplication().unregisterActivityLifecycleCallbacks(this);
+        mapView = null;
     }
 
     @Override
-    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-        if (disposed || activity.hashCode() != registrarActivityHashCode) {
+    public void onCreate(@NonNull LifecycleOwner owner) {
+        if (disposed) {
             return;
         }
-        mapView.onCreate(savedInstanceState);
+        mapView.onCreate(null);
     }
 
     @Override
-    public void onActivityStarted(Activity activity) {
-        if (disposed || activity.hashCode() != registrarActivityHashCode) {
+    public void onStart(@NonNull LifecycleOwner owner) {
+        if (disposed) {
             return;
         }
         mapView.onStart();
     }
 
     @Override
-    public void onActivityResumed(Activity activity) {
-        if (disposed || activity.hashCode() != registrarActivityHashCode) {
+    public void onResume(@NonNull LifecycleOwner owner) {
+        if (disposed) {
             return;
         }
         mapView.onResume();
@@ -1247,36 +1228,28 @@ final class MapboxMapController
     }
 
     @Override
-    public void onActivityPaused(Activity activity) {
-        if (disposed || activity.hashCode() != registrarActivityHashCode) {
+    public void onPause(@NonNull LifecycleOwner owner) {
+        if (disposed) {
             return;
         }
-        mapView.onPause();
-        stopListeningForLocationUpdates();
+        mapView.onResume();
     }
 
     @Override
-    public void onActivityStopped(Activity activity) {
-        if (disposed || activity.hashCode() != registrarActivityHashCode) {
+    public void onStop(@NonNull LifecycleOwner owner) {
+        if (disposed) {
             return;
         }
         mapView.onStop();
     }
 
     @Override
-    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-        if (disposed || activity.hashCode() != registrarActivityHashCode) {
+    public void onDestroy(@NonNull LifecycleOwner owner) {
+        owner.getLifecycle().removeObserver(this);
+        if (disposed) {
             return;
         }
-        mapView.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public void onActivityDestroyed(Activity activity) {
-        if (disposed || activity.hashCode() != registrarActivityHashCode) {
-            return;
-        }
-        mapView.onDestroy();
+        destroyMapViewIfNecessary();
     }
 
     // MapboxMapOptionsSink methods
@@ -1424,7 +1397,6 @@ final class MapboxMapController
     private void startListeningForLocationUpdates() {
         if (locationEngineCallback == null && locationComponent != null && locationComponent.getLocationEngine() != null) {
             locationEngineCallback = new LocationEngineCallback<LocationEngineResult>() {
-                @RequiresApi(api = Build.VERSION_CODES.O)
                 @Override
                 public void onSuccess(LocationEngineResult result) {
                     onUserLocationUpdate(result.getLastLocation());
@@ -1478,8 +1450,7 @@ final class MapboxMapController
      * @return
      */
     private Bitmap getScaledImage(String imageId, float density) {
-        AssetManager assetManager = registrar.context().getAssets();
-        AssetFileDescriptor assetFileDescriptor = null;
+        AssetFileDescriptor assetFileDescriptor;
 
         // Split image path into parts.
         List<String> imagePathList = Arrays.asList(imageId.split("/"));
@@ -1492,7 +1463,7 @@ final class MapboxMapController
             String assetPath;
             if (i == 1) {
                 // If density is 1.0x then simply take the default asset path
-                assetPath = registrar.lookupKeyForAsset(imageId);
+                assetPath = MapboxMapsPlugin.flutterAssets.getAssetFilePathByName(imageId);
             } else {
                 // Build a resolution aware asset path as follows:
                 // <directory asset>/<ratio>/<image name>
@@ -1505,7 +1476,7 @@ final class MapboxMapController
                 stringBuilder.append(((float) i) + "x");
                 stringBuilder.append("/");
                 stringBuilder.append(imagePathList.get(imagePathList.size() - 1));
-                assetPath = registrar.lookupKeyForAsset(stringBuilder.toString());
+                assetPath = MapboxMapsPlugin.flutterAssets.getAssetFilePathByName(stringBuilder.toString());
             }
             // Build up a list of resolution aware asset paths.
             assetPathList.add(assetPath);
@@ -1516,7 +1487,7 @@ final class MapboxMapController
         for (String assetPath : assetPathList) {
             try {
                 // Read path (throws exception if doesn't exist).
-                assetFileDescriptor = assetManager.openFd(assetPath);
+                assetFileDescriptor = mapView.getContext().getAssets().openFd(assetPath);
                 InputStream assetStream = assetFileDescriptor.createInputStream();
                 bitmap = BitmapFactory.decodeStream(assetStream);
                 assetFileDescriptor.close(); // Close for memory

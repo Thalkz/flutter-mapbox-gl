@@ -4,8 +4,7 @@
 
 part of mapbox_gl;
 
-final MethodChannel _globalChannel =
-    MethodChannel('plugins.flutter.io/mapbox_gl');
+final MethodChannel _globalChannel = MethodChannel('plugins.flutter.io/mapbox_gl');
 
 /// Copy tiles db file passed in to the tiles cache directory (sideloaded) to
 /// make tiles available offline.
@@ -17,3 +16,11 @@ Future<void> installOfflineMapTiles(String tilesDb) async {
     },
   );
 }
+
+Future<dynamic> deleteOfflineRegion(int id, {String accessToken}) => _globalChannel.invokeMethod(
+      'deleteOfflineRegion',
+      <String, dynamic>{
+        'id': id,
+        'accessToken': accessToken,
+      },
+    );

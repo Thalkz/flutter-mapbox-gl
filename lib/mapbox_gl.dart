@@ -20,6 +20,8 @@ export 'package:mapbox_gl_platform_interface/mapbox_gl_platform_interface.dart'
         LatLngBounds,
         LatLngQuad,
         CameraPosition,
+        UserLocation,
+        UserHeading,
         CameraUpdate,
         ArgumentCallbacks,
         Symbol,

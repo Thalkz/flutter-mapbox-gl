@@ -35,7 +35,7 @@ abstract class MapboxGlPlatform {
 
   final ArgumentCallbacks<CameraPosition> onCameraMovePlatform = ArgumentCallbacks<CameraPosition>();
 
-  final ArgumentCallbacks<void> onCameraIdlePlatform = ArgumentCallbacks<void>();
+  final ArgumentCallbacks<CameraPosition> onCameraIdlePlatform = ArgumentCallbacks<CameraPosition>();
 
   final ArgumentCallbacks<void> onMapStyleLoadedPlatform = ArgumentCallbacks<void>();
 
@@ -197,19 +197,23 @@ abstract class MapboxGlPlatform {
     throw UnimplementedError('setSymbolTextIgnorePlacement() has not been implemented.');
   }
 
-  Future<void> addImageSource(String name, Uint8List bytes, LatLngQuad coordinates) async {
+  Future<void> addImageSource(String imageSourceId, Uint8List bytes, LatLngQuad coordinates) async {
     throw UnimplementedError('addImageSource() has not been implemented.');
   }
 
-  Future<void> removeImageSource(String name) async {
+  Future<void> removeImageSource(String imageSourceId) async {
     throw UnimplementedError('removeImageSource() has not been implemented.');
   }
 
-  Future<void> addLayer(String name, String sourceId) async {
+  Future<void> addLayer(String imageLayerId, String imageSourceId) async {
     throw UnimplementedError('addLayer() has not been implemented.');
   }
 
-  Future<void> removeLayer(String name) async {
+  Future<void> addLayerBelow(String imageLayerId, String imageSourceId, String belowLayerId) async {
+    throw UnimplementedError('addLayerBelow() has not been implemented.');
+  }
+
+  Future<void> removeLayer(String imageLayerId) async {
     throw UnimplementedError('removeLayer() has not been implemented.');
   }
 

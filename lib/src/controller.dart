@@ -54,13 +54,7 @@ class MapboxMapController extends ChangeNotifier {
     });
 
     MapboxGlPlatform.getInstance(_id).onSymbolTappedPlatform.add((symbolId) {
-      Symbol symbol;
-      if (_symbols.containsKey(symbolId)) {
-        symbol = _symbols[symbolId];
-      } else if (_neoClusterSymbols.containsKey(symbolId)) {
-        symbol = _neoClusterSymbols[symbolId];
-      }
-
+      final Symbol symbol = _symbols[symbolId];
       if (symbol != null) {
         onSymbolTapped(symbol);
       }
@@ -97,8 +91,11 @@ class MapboxMapController extends ChangeNotifier {
       notifyListeners();
     });
 
-    MapboxGlPlatform.getInstance(_id).onCameraIdlePlatform.add((_) {
+    MapboxGlPlatform.getInstance(_id).onCameraIdlePlatform.add((cameraPosition) {
       _isCameraMoving = false;
+      // if (cameraPosition != null) {
+      //   _cameraPosition = cameraPosition;
+      // }
       if (onCameraIdle != null) {
         onCameraIdle();
       }
@@ -203,11 +200,11 @@ class MapboxMapController extends ChangeNotifier {
   Set<Symbol> get symbols => Set<Symbol>.from(_symbols.values);
   final Map<String, Symbol> _symbols = <String, Symbol>{};
 
-  Set<Symbol> get neoClusterSymbols => Set<Symbol>.from(_symbols.values);
-  final Map<String, Symbol> _neoClusterSymbols = <String, Symbol>{};
-
   /// Callbacks to receive tap events for lines placed on this map.
   final ArgumentCallbacks<Line> onLineTapped = ArgumentCallbacks<Line>();
+
+  Set<Symbol> get neoClusterSymbols => Set<Symbol>.from(_neoClusterSymbols.values);
+  final Map<String, Symbol> _neoClusterSymbols = <String, Symbol>{};
 
   /// The current set of lines on this map.
   ///
@@ -601,7 +598,7 @@ class MapboxMapController extends ChangeNotifier {
   /// been notified.
   Future<Fill> addFill(FillOptions options, [Map data]) async {
     final FillOptions effectiveOptions = FillOptions.defaultOptions.copyWith(options);
-    final fill = await MapboxGlPlatform.getInstance(_id).addFill(effectiveOptions);
+    final fill = await MapboxGlPlatform.getInstance(_id).addFill(effectiveOptions, data);
     _fills[fill.id] = fill;
     notifyListeners();
     return fill;
@@ -620,6 +617,21 @@ class MapboxMapController extends ChangeNotifier {
     assert(changes != null);
     await MapboxGlPlatform.getInstance(_id).updateFill(fill, changes);
     fill.options = fill.options.copyWith(changes);
+    notifyListeners();
+  }
+
+  /// Removes all [fill] from the map.
+  ///
+  /// Change listeners are notified once all fills have been removed on the
+  /// platform side.
+  ///
+  /// The returned [Future] completes once listeners have been notified.
+  Future<void> clearFills() async {
+    assert(_fills != null);
+    final List<String> fillIds = List<String>.from(_fills.keys);
+    for (String id in fillIds) {
+      await _removeFill(id);
+    }
     notifyListeners();
   }
 
@@ -803,24 +815,29 @@ class MapboxMapController extends ChangeNotifier {
     await MapboxGlPlatform.getInstance(_id).setSymbolTextIgnorePlacement(enable);
   }
 
-  /// Adds an image source to the style currently displayed in the map, so that it can later be referred to by the provided name.
-  Future<void> addImageSource(String name, Uint8List bytes, LatLngQuad coordinates) {
-    return MapboxGlPlatform.getInstance(_id).addImageSource(name, bytes, coordinates);
+  /// Adds an image source to the style currently displayed in the map, so that it can later be referred to by the provided id.
+  Future<void> addImageSource(String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
+    return MapboxGlPlatform.getInstance(_id).addImageSource(imageSourceId, bytes, coordinates);
   }
 
-  /// Removes previously added image source by name
-  Future<void> removeImageSource(String name) {
-    return MapboxGlPlatform.getInstance(_id).removeImageSource(name);
+  /// Removes previously added image source by id
+  Future<void> removeImageSource(String imageSourceId) {
+    return MapboxGlPlatform.getInstance(_id).removeImageSource(imageSourceId);
   }
 
-  /// Adds layer with name
-  Future<void> addLayer(String name, String sourceId) {
-    return MapboxGlPlatform.getInstance(_id).addLayer(name, sourceId);
+  /// Adds a Mapbox style layer to the map's style at render time.
+  Future<void> addLayer(String imageLayerId, String imageSourceId) {
+    return MapboxGlPlatform.getInstance(_id).addLayer(imageLayerId, imageSourceId);
   }
 
-  /// Removes layer by name
-  Future<void> removeLayer(String name) {
-    return MapboxGlPlatform.getInstance(_id).removeLayer(name);
+  /// Adds a Mapbox style layer below the layer provided with belowLayerId to the map's style at render time,
+  Future<void> addLayerBelow(String imageLayerId, String imageSourceId, String belowLayerId) {
+    return MapboxGlPlatform.getInstance(_id).addLayerBelow(imageLayerId, imageSourceId, belowLayerId);
+  }
+
+  /// Removes a Mapbox style layer
+  Future<void> removeLayer(String imageLayerId) {
+    return MapboxGlPlatform.getInstance(_id).removeLayer(imageLayerId);
   }
 
   /// Returns the point on the screen that corresponds to a geographical coordinate ([latLng]). The screen location is in screen pixels (not display pixels) relative to the top left of the map (not of the whole screen)

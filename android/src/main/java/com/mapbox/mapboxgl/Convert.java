@@ -64,6 +64,15 @@ class Convert {
         return builder.build();
     }
 
+    static List<String> toAnnotationOrder(Object o) {
+        final List<?> data = toList(o);
+        List<String> annotations = new ArrayList();
+        for (int index = 0; index < data.size(); index++) {
+            annotations.add(toString(data.get(index)));
+        }
+        return annotations;
+    }
+
     static boolean isScrollByCameraUpdate(Object o) {
         return toString(toList(o).get(0)).equals("scrollBy");
     }
@@ -139,7 +148,7 @@ class Convert {
         return Arrays.asList(latLng.getLatitude(), latLng.getLongitude());
     }
 
-     static LatLng toLatLng(Object o) {
+    static LatLng toLatLng(Object o) {
         final List<?> data = toList(o);
         return new LatLng(toDouble(data.get(0)), toDouble(data.get(1)));
     }
