@@ -203,7 +203,7 @@ class MapboxMapController extends ChangeNotifier {
   /// Callbacks to receive tap events for lines placed on this map.
   final ArgumentCallbacks<Line> onLineTapped = ArgumentCallbacks<Line>();
 
-  Set<Symbol> get neoClusterSymbols => Set<Symbol>.from(_symbols.values);
+  Set<Symbol> get neoClusterSymbols => Set<Symbol>.from(_neoClusterSymbols.values);
   final Map<String, Symbol> _neoClusterSymbols = <String, Symbol>{};
 
   /// The current set of lines on this map.
