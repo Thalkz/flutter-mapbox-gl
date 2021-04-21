@@ -34,15 +34,18 @@ typedef void OnMapIdleCallback();
 /// Line tap events can be received by adding callbacks to [onLineTapped].
 /// Circle tap events can be received by adding callbacks to [onCircleTapped].
 class MapboxMapController extends ChangeNotifier {
-  MapboxMapController._(this._id, CameraPosition initialCameraPosition,
-      {this.onStyleLoadedCallback,
-      this.onMapClick,
-      this.onMapLongClick,
-      this.onCameraTrackingDismissed,
-      this.onCameraTrackingChanged,
-      this.onMapIdle,
-      this.onUserLocationUpdated,
-      this.onCameraIdle}) {
+  MapboxMapController._(
+    this._id,
+    CameraPosition initialCameraPosition, {
+    this.onStyleLoadedCallback,
+    this.onMapClick,
+    this.onMapLongClick,
+    this.onCameraTrackingDismissed,
+    this.onCameraTrackingChanged,
+    this.onMapIdle,
+    this.onUserLocationUpdated,
+    this.onCameraIdle,
+  }) {
     _cameraPosition = initialCameraPosition;
 
     MapboxGlPlatform.getInstance(_id).onInfoWindowTappedPlatform.add((symbolId) {
@@ -227,8 +230,8 @@ class MapboxMapController extends ChangeNotifier {
 
   /// Returns the most recent camera position reported by the platform side.
   /// Will be null, if [MapboxMap.trackCameraPosition] is false.
-  CameraPosition? get cameraPosition => _cameraPosition;
-  CameraPosition? _cameraPosition;
+  CameraPosition get cameraPosition => _cameraPosition;
+  late CameraPosition _cameraPosition;
 
   final int _id; //ignore: unused_field
 
@@ -254,7 +257,7 @@ class MapboxMapController extends ChangeNotifier {
   /// platform side.
   /// It returns true if the camera was successfully moved and false if the movement was canceled.
   /// Note: this currently always returns immediately with a value of null on iOS
-  Future<bool?> animateCamera(CameraUpdate cameraUpdate) async {
+  Future<bool> animateCamera(CameraUpdate cameraUpdate) async {
     return MapboxGlPlatform.getInstance(_id).animateCamera(cameraUpdate);
   }
 
@@ -265,7 +268,7 @@ class MapboxMapController extends ChangeNotifier {
   /// platform side.
   /// It returns true if the camera was successfully moved and false if the movement was canceled.
   /// Note: this currently always returns immediately with a value of null on iOS
-  Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
+  Future<bool> moveCamera(CameraUpdate cameraUpdate) async {
     return MapboxGlPlatform.getInstance(_id).moveCamera(cameraUpdate);
   }
 
@@ -321,7 +324,7 @@ class MapboxMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after the query has been made on the
   /// platform side.
-  Future<bool?> getTelemetryEnabled() async {
+  Future<bool> getTelemetryEnabled() async {
     return MapboxGlPlatform.getInstance(_id).getTelemetryEnabled();
   }
 
@@ -637,11 +640,11 @@ class MapboxMapController extends ChangeNotifier {
     _fills.remove(id);
   }
 
-  Future<List?> queryRenderedFeatures(Point<double> point, List<String> layerIds, List<Object> filter) async {
+  Future<List> queryRenderedFeatures(Point<double> point, List<String> layerIds, List<Object> filter) async {
     return MapboxGlPlatform.getInstance(_id).queryRenderedFeatures(point, layerIds, filter);
   }
 
-  Future<List?> queryRenderedFeaturesInRect(Rect rect, List<String> layerIds, String filter) async {
+  Future<List> queryRenderedFeaturesInRect(Rect rect, List<String> layerIds, String filter) async {
     return MapboxGlPlatform.getInstance(_id).queryRenderedFeaturesInRect(rect, layerIds, filter);
   }
 
@@ -831,7 +834,7 @@ class MapboxMapController extends ChangeNotifier {
 
   /// Returns the distance spanned by one pixel at the specified [latitude] and current zoom level.
   /// The distance between pixels decreases as the latitude approaches the poles. This relationship parallels the relationship between longitudinal coordinates at different latitudes.
-  Future<double?> getMetersPerPixelAtLatitude(double latitude) async {
+  Future<double> getMetersPerPixelAtLatitude(double latitude) async {
     return MapboxGlPlatform.getInstance(_id).getMetersPerPixelAtLatitude(latitude);
   }
 }
