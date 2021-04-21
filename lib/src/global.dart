@@ -17,7 +17,7 @@ Future<void> installOfflineMapTiles(String tilesDb) async {
   );
 }
 
-Future<dynamic> deleteOfflineRegion(int id, {String accessToken}) => _globalChannel.invokeMethod(
+Future<dynamic> deleteOfflineRegion(int id, {String? accessToken}) => _globalChannel.invokeMethod(
       'deleteOfflineRegion',
       <String, dynamic>{
         'id': id,

@@ -10,8 +10,8 @@ typedef void MapCreatedCallback(MapboxMapController controller);
 
 class MapboxMap extends StatefulWidget {
   const MapboxMap({
-    Key key,
-    @required this.initialCameraPosition,
+    Key? key,
+    required this.initialCameraPosition,
     this.accessToken,
     this.onMapCreated,
     this.onStyleLoadedCallback,
@@ -45,9 +45,7 @@ class MapboxMap extends StatefulWidget {
       AnnotationType.circle,
       AnnotationType.fill,
     ],
-  })  : assert(initialCameraPosition != null),
-        assert(annotationOrder != null),
-        assert(annotationOrder.length == 4),
+  })  : assert(annotationOrder.length == 4),
         super(key: key);
 
   /// Defined the layer order of annotations displayed on map
@@ -59,14 +57,14 @@ class MapboxMap extends StatefulWidget {
   /// The reccommended way is to use this parameter to set your access token, an alternative way to add your access tokens through external files is described in the plugin's wiki on Github.
   ///
   /// Note: You should not use this parameter AND set the access token through external files at the same time, and you should use the same token throughout the entire app.
-  final String accessToken;
+  final String? accessToken;
 
   /// Please note: you should only add annotations (e.g. symbols or circles) after `onStyleLoadedCallback` has been called.
-  final MapCreatedCallback onMapCreated;
+  final MapCreatedCallback? onMapCreated;
 
   /// Called when the map style has been successfully loaded and the annotation managers have been enabled.
   /// Please note: you should only add annotations (e.g. symbols or circles) after this callback has been called.
-  final OnStyleLoadedCallback onStyleLoadedCallback;
+  final OnStyleLoadedCallback? onStyleLoadedCallback;
 
   /// The initial position of the map's camera.
   final CameraPosition initialCameraPosition;
@@ -80,7 +78,7 @@ class MapboxMap extends StatefulWidget {
   /// Style URL or Style JSON
   /// Can be a MapboxStyle constant, any Mapbox Style URL,
   /// or a StyleJSON (https://docs.mapbox.com/mapbox-gl-js/style-spec/)
-  final String styleString;
+  final String? styleString;
 
   /// Preferred bounds for the camera zoom level.
   ///
@@ -138,16 +136,16 @@ class MapboxMap extends StatefulWidget {
   final MyLocationRenderMode myLocationRenderMode;
 
   /// Set the layout margins for the Mapbox Logo
-  final Point logoViewMargins;
+  final Point? logoViewMargins;
 
   /// Set the position for the Mapbox Compass
-  final CompassViewPosition compassViewPosition;
+  final CompassViewPosition? compassViewPosition;
 
   /// Set the layout margins for the Mapbox Compass
-  final Point compassViewMargins;
+  final Point? compassViewMargins;
 
   /// Set the layout margins for the Mapbox Attribution Buttons
-  final Point attributionButtonMargins;
+  final Point? attributionButtonMargins;
 
   /// Which gestures should be consumed by the map.
   ///
@@ -158,23 +156,23 @@ class MapboxMap extends StatefulWidget {
   ///
   /// When this set is empty or null, the map will only handle pointer events for gestures that
   /// were not claimed by any other gesture recognizer.
-  final Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers;
+  final Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers;
 
-  final OnMapClickCallback onMapClick;
-  final OnMapClickCallback onMapLongClick;
+  final OnMapClickCallback? onMapClick;
+  final OnMapClickCallback? onMapLongClick;
 
   /// While the `myLocationEnabled` property is set to `true`, this method is
   /// called whenever a new location update is received by the map view.
-  final OnUserLocationUpdated onUserLocationUpdated;
+  final OnUserLocationUpdated? onUserLocationUpdated;
 
   /// Called when the map's camera no longer follows the physical device location, e.g. because the user moved the map
-  final OnCameraTrackingDismissedCallback onCameraTrackingDismissed;
+  final OnCameraTrackingDismissedCallback? onCameraTrackingDismissed;
 
   /// Called when the location tracking mode changes
-  final OnCameraTrackingChangedCallback onCameraTrackingChanged;
+  final OnCameraTrackingChangedCallback? onCameraTrackingChanged;
 
   // Called when camera movement has ended.
-  final OnCameraIdleCallback onCameraIdle;
+  final OnCameraIdleCallback? onCameraIdle;
 
   /// Called when map view is entering an idle state, and no more drawing will
   /// be necessary until new data is loaded or there is some interaction with
@@ -182,17 +180,16 @@ class MapboxMap extends StatefulWidget {
   /// * No camera transitions are in progress
   /// * All currently requested tiles have loaded
   /// * All fade/transition animations have completed
-  final OnMapIdleCallback onMapIdle;
+  final OnMapIdleCallback? onMapIdle;
 
   @override
   State createState() => _MapboxMapState();
 }
 
 class _MapboxMapState extends State<MapboxMap> {
-  final Completer<MapboxMapController> _controller =
-      Completer<MapboxMapController>();
+  final Completer<MapboxMapController> _controller = Completer<MapboxMapController>();
 
-  _MapboxMapOptions _mapboxMapOptions;
+  late _MapboxMapOptions _mapboxMapOptions;
   final MapboxGlPlatform _mapboxGlPlatform = MapboxGlPlatform.createInstance();
 
   @override
@@ -200,13 +197,12 @@ class _MapboxMapState extends State<MapboxMap> {
     final List<String> annotationOrder = widget.annotationOrder.map((e) => e.toString()).toList();
 
     final Map<String, dynamic> creationParams = <String, dynamic>{
-      'initialCameraPosition': widget.initialCameraPosition?.toMap(),
+      'initialCameraPosition': widget.initialCameraPosition.toMap(),
       'options': _MapboxMapOptions.fromWidget(widget).toMap(),
       'accessToken': widget.accessToken,
       'annotationOrder': annotationOrder,
     };
-    return _mapboxGlPlatform.buildView(
-        creationParams, onPlatformViewCreated, widget.gestureRecognizers);
+    return _mapboxGlPlatform.buildView(creationParams, onPlatformViewCreated, widget.gestureRecognizers!);
   }
 
   @override
@@ -219,8 +215,7 @@ class _MapboxMapState extends State<MapboxMap> {
   void didUpdateWidget(MapboxMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     final _MapboxMapOptions newOptions = _MapboxMapOptions.fromWidget(widget);
-    final Map<String, dynamic> updates =
-        _mapboxMapOptions.updatesMap(newOptions);
+    final Map<String, dynamic> updates = _mapboxMapOptions.updatesMap(newOptions);
     _updateOptions(updates);
     _mapboxMapOptions = newOptions;
   }
@@ -235,14 +230,12 @@ class _MapboxMapState extends State<MapboxMap> {
 
   Future<void> onPlatformViewCreated(int id) async {
     MapboxGlPlatform.addInstance(id, _mapboxGlPlatform);
-    final MapboxMapController controller = MapboxMapController.init(
-      id,
-      widget.initialCameraPosition,
-      onStyleLoadedCallback: () {
-        if (_controller.isCompleted) {
-          widget.onStyleLoadedCallback();
-        } else {
-        _controller.future.then((_) => widget.onStyleLoadedCallback());
+    final MapboxMapController controller = MapboxMapController.init(id, widget.initialCameraPosition,
+        onStyleLoadedCallback: () {
+      if (_controller.isCompleted) {
+        widget.onStyleLoadedCallback!();
+      } else {
+        _controller.future.then((_) => widget.onStyleLoadedCallback!());
       }
     },
         onMapClick: widget.onMapClick,
@@ -251,12 +244,11 @@ class _MapboxMapState extends State<MapboxMap> {
         onCameraTrackingDismissed: widget.onCameraTrackingDismissed,
         onCameraTrackingChanged: widget.onCameraTrackingChanged,
         onCameraIdle: widget.onCameraIdle,
-        onMapIdle: widget.onMapIdle
-    );
+        onMapIdle: widget.onMapIdle);
     await MapboxMapController.initPlatform(id);
     _controller.complete(controller);
     if (widget.onMapCreated != null) {
-      widget.onMapCreated(controller);
+      widget.onMapCreated!(controller);
     }
   }
 }
@@ -306,37 +298,37 @@ class _MapboxMapOptions {
     );
   }
 
-  final bool compassEnabled;
+  final bool? compassEnabled;
 
-  final CameraTargetBounds cameraTargetBounds;
+  final CameraTargetBounds? cameraTargetBounds;
 
-  final String styleString;
+  final String? styleString;
 
-  final MinMaxZoomPreference minMaxZoomPreference;
+  final MinMaxZoomPreference? minMaxZoomPreference;
 
-  final bool rotateGesturesEnabled;
+  final bool? rotateGesturesEnabled;
 
-  final bool scrollGesturesEnabled;
+  final bool? scrollGesturesEnabled;
 
-  final bool tiltGesturesEnabled;
+  final bool? tiltGesturesEnabled;
 
-  final bool trackCameraPosition;
+  final bool? trackCameraPosition;
 
-  final bool zoomGesturesEnabled;
+  final bool? zoomGesturesEnabled;
 
-  final bool myLocationEnabled;
+  final bool? myLocationEnabled;
 
-  final MyLocationTrackingMode myLocationTrackingMode;
+  final MyLocationTrackingMode? myLocationTrackingMode;
 
-  final MyLocationRenderMode myLocationRenderMode;
+  final MyLocationRenderMode? myLocationRenderMode;
 
-  final Point logoViewMargins;
+  final Point? logoViewMargins;
 
-  final CompassViewPosition compassViewPosition;
+  final CompassViewPosition? compassViewPosition;
 
-  final Point compassViewMargins;
+  final Point? compassViewMargins;
 
-  final Point attributionButtonMargins;
+  final Point? attributionButtonMargins;
 
   Map<String, dynamic> toMap() {
     final Map<String, dynamic> optionsMap = <String, dynamic>{};
@@ -347,7 +339,7 @@ class _MapboxMapOptions {
       }
     }
 
-    List<dynamic> pointToArray(Point fieldName) {
+    List<dynamic>? pointToArray(Point? fieldName) {
       if (fieldName != null) {
         return <dynamic>[fieldName.x, fieldName.y];
       }
@@ -370,15 +362,12 @@ class _MapboxMapOptions {
     addIfNonNull('logoViewMargins', pointToArray(logoViewMargins));
     addIfNonNull('compassViewPosition', compassViewPosition?.index);
     addIfNonNull('compassViewMargins', pointToArray(compassViewMargins));
-    addIfNonNull(
-        'attributionButtonMargins', pointToArray(attributionButtonMargins));
+    addIfNonNull('attributionButtonMargins', pointToArray(attributionButtonMargins));
     return optionsMap;
   }
 
   Map<String, dynamic> updatesMap(_MapboxMapOptions newOptions) {
     final Map<String, dynamic> prevOptionsMap = toMap();
-    return newOptions.toMap()
-      ..removeWhere(
-          (String key, dynamic value) => prevOptionsMap[key] == value);
+    return newOptions.toMap()..removeWhere((String key, dynamic value) => prevOptionsMap[key] == value);
   }
 }
