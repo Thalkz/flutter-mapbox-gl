@@ -247,8 +247,11 @@ class MapboxMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after listeners have been notified.
   Future<void> _updateMapOptions(Map<String, dynamic> optionsUpdate) async {
-    _cameraPosition = await MapboxGlPlatform.getInstance(_id).updateMapOptions(optionsUpdate);
-    notifyListeners();
+    final cameraPosition = await MapboxGlPlatform.getInstance(_id).updateMapOptions(optionsUpdate);
+    if (cameraPosition != null) {
+      _cameraPosition = cameraPosition;
+      notifyListeners();
+    }
   }
 
   /// Starts an animated change of the map camera position.
@@ -257,7 +260,7 @@ class MapboxMapController extends ChangeNotifier {
   /// platform side.
   /// It returns true if the camera was successfully moved and false if the movement was canceled.
   /// Note: this currently always returns immediately with a value of null on iOS
-  Future<bool> animateCamera(CameraUpdate cameraUpdate) async {
+  Future<bool?> animateCamera(CameraUpdate cameraUpdate) async {
     return MapboxGlPlatform.getInstance(_id).animateCamera(cameraUpdate);
   }
 
@@ -268,7 +271,7 @@ class MapboxMapController extends ChangeNotifier {
   /// platform side.
   /// It returns true if the camera was successfully moved and false if the movement was canceled.
   /// Note: this currently always returns immediately with a value of null on iOS
-  Future<bool> moveCamera(CameraUpdate cameraUpdate) async {
+  Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
     return MapboxGlPlatform.getInstance(_id).moveCamera(cameraUpdate);
   }
 
@@ -324,7 +327,7 @@ class MapboxMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes after the query has been made on the
   /// platform side.
-  Future<bool> getTelemetryEnabled() async {
+  Future<bool?> getTelemetryEnabled() async {
     return MapboxGlPlatform.getInstance(_id).getTelemetryEnabled();
   }
 
@@ -640,11 +643,11 @@ class MapboxMapController extends ChangeNotifier {
     _fills.remove(id);
   }
 
-  Future<List> queryRenderedFeatures(Point<double> point, List<String> layerIds, List<Object> filter) async {
+  Future<List?> queryRenderedFeatures(Point<double> point, List<String> layerIds, List<Object> filter) async {
     return MapboxGlPlatform.getInstance(_id).queryRenderedFeatures(point, layerIds, filter);
   }
 
-  Future<List> queryRenderedFeaturesInRect(Rect rect, List<String> layerIds, String filter) async {
+  Future<List?> queryRenderedFeaturesInRect(Rect rect, List<String> layerIds, String filter) async {
     return MapboxGlPlatform.getInstance(_id).queryRenderedFeaturesInRect(rect, layerIds, filter);
   }
 
@@ -834,7 +837,7 @@ class MapboxMapController extends ChangeNotifier {
 
   /// Returns the distance spanned by one pixel at the specified [latitude] and current zoom level.
   /// The distance between pixels decreases as the latitude approaches the poles. This relationship parallels the relationship between longitudinal coordinates at different latitudes.
-  Future<double> getMetersPerPixelAtLatitude(double latitude) async {
+  Future<double?> getMetersPerPixelAtLatitude(double latitude) async {
     return MapboxGlPlatform.getInstance(_id).getMetersPerPixelAtLatitude(latitude);
   }
 }
