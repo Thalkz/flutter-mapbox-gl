@@ -15,7 +15,7 @@ class MapboxMap extends StatefulWidget {
     this.accessToken,
     this.onMapCreated,
     this.onStyleLoadedCallback,
-    this.gestureRecognizers,
+    this.gestureRecognizers = const {},
     this.compassEnabled = true,
     this.cameraTargetBounds = CameraTargetBounds.unbounded,
     this.styleString,
@@ -156,7 +156,7 @@ class MapboxMap extends StatefulWidget {
   ///
   /// When this set is empty or null, the map will only handle pointer events for gestures that
   /// were not claimed by any other gesture recognizer.
-  final Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers;
+  final Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers;
 
   final OnMapClickCallback? onMapClick;
   final OnMapClickCallback? onMapLongClick;
@@ -202,7 +202,7 @@ class _MapboxMapState extends State<MapboxMap> {
       'accessToken': widget.accessToken,
       'annotationOrder': annotationOrder,
     };
-    return _mapboxGlPlatform.buildView(creationParams, onPlatformViewCreated, widget.gestureRecognizers!);
+    return _mapboxGlPlatform.buildView(creationParams, onPlatformViewCreated, widget.gestureRecognizers);
   }
 
   @override
