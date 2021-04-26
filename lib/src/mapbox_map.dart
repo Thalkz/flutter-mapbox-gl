@@ -233,9 +233,15 @@ class _MapboxMapState extends State<MapboxMap> {
     final MapboxMapController controller = MapboxMapController.init(id, widget.initialCameraPosition,
         onStyleLoadedCallback: () {
       if (_controller.isCompleted) {
-        widget.onStyleLoadedCallback!();
+        if (widget.onStyleLoadedCallback != null) {
+          widget.onStyleLoadedCallback!();
+        }
       } else {
-        _controller.future.then((_) => widget.onStyleLoadedCallback!());
+        _controller.future.then((_) {
+          if (widget.onStyleLoadedCallback != null) {
+            widget.onStyleLoadedCallback!();
+          }
+        });
       }
     },
         onMapClick: widget.onMapClick,

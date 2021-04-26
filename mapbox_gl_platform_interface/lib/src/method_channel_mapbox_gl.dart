@@ -410,8 +410,7 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
   @override
   Future<LatLngBounds> getVisibleRegion() async {
     try {
-      final Map<Object, Object> reply =
-          await (_channel.invokeMethod('map#getVisibleRegion', null) as Future<Map<Object, Object>>);
+      final Map<Object, Object> reply = await (_channel.invokeMethod('map#getVisibleRegion', null));
       late LatLng southwest, northeast;
       if (reply.containsKey('sw')) {
         List<dynamic> coordinates = reply['sw'] as List<dynamic>;
