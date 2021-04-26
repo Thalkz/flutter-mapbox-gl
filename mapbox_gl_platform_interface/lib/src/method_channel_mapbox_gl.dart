@@ -208,7 +208,7 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
       <String, dynamic>{
         'options': options.map((o) => o.toJson()).toList(),
       },
-    ) as Future<List<dynamic>>);
+    ));
     final List<Symbol> symbols = symbolIds
         .asMap()
         .map((i, id) =>
@@ -578,7 +578,7 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
       <String, dynamic>{
         'options': options.map((o) => o.toJson()).toList(),
       },
-    ) as Future<List<dynamic>>);
+    ));
     final List<Symbol> symbols = symbolIds
         .asMap()
         .map((i, id) =>
