@@ -668,17 +668,16 @@ class MapboxMapController extends ChangeNotifier {
 
   // CUSTOM
   Future<Symbol> addNeoClusterSymbol(SymbolOptions options, [Map? data]) async {
-    List<Symbol> result = await addNeoClusterSymbols([options], [data]);
+    List<Symbol> result = await addNeoClusterSymbols([options], [data].whereType<Map>().toList());
 
     return result.first;
   }
 
   // CUSTOM
-  Future<List<Symbol>> addNeoClusterSymbols(List<SymbolOptions> options, [List<Map?>? data]) async {
+  Future<List<Symbol>> addNeoClusterSymbols(List<SymbolOptions> options, [List<Map>? data]) async {
     final List<SymbolOptions> effectiveOptions = options.map((o) => SymbolOptions.defaultOptions.copyWith(o)).toList();
 
-    final symbols = await MapboxGlPlatform.getInstance(_id)
-        .addNeoClusterSymbols(effectiveOptions, data as List<Map<dynamic, dynamic>>?);
+    final symbols = await MapboxGlPlatform.getInstance(_id).addNeoClusterSymbols(effectiveOptions, data);
     symbols.forEach((s) => _neoClusterSymbols[s.id] = s);
     notifyListeners();
     return symbols;
