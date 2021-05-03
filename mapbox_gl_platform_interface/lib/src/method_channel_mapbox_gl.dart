@@ -87,14 +87,14 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
             heading: heading == null
                 ? null
                 : UserHeading(
-                    magneticHeading: heading['magneticHeading'],
-                    trueHeading: heading['trueHeading'],
-                    headingAccuracy: heading['headingAccuracy'],
-                    x: heading['x'],
-                    y: heading['y'],
-                    z: heading['x'],
-                    timestamp: DateTime.fromMillisecondsSinceEpoch(heading['timestamp']),
-                  ),
+              magneticHeading: heading['magneticHeading'],
+              trueHeading: heading['trueHeading'],
+              headingAccuracy: heading['headingAccuracy'],
+              x: heading['x'],
+              y: heading['y'],
+              z: heading['x'],
+              timestamp: DateTime.fromMillisecondsSinceEpoch(heading['timestamp']),
+            ),
             timestamp: DateTime.fromMillisecondsSinceEpoch(userLocation['timestamp'])));
         break;
       default:
@@ -212,7 +212,7 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
     final List<Symbol> symbols = symbolIds
         .asMap()
         .map((i, id) =>
-            MapEntry(i, Symbol(id, options.elementAt(i), data != null && data.length > i ? data.elementAt(i) : null)))
+        MapEntry(i, Symbol(id, options.elementAt(i), data != null && data.length > i ? data.elementAt(i) : null)))
         .values
         .toList();
 
@@ -393,8 +393,9 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
   Future<LatLng> requestMyLocationLatLng() async {
     try {
       final Map<Object, Object> reply =
-          await (_channel.invokeMethod('locationComponent#getLastLocation', null) as Future<Map<Object, Object>>);
-      double latitude = 0.0, longitude = 0.0;
+      await (_channel.invokeMethod('locationComponent#getLastLocation', null) as Future<Map<Object, Object>>);
+      double latitude = 0.0,
+          longitude = 0.0;
       if (reply.containsKey('latitude') && reply['latitude'] != null) {
         latitude = double.parse(reply['latitude'].toString());
       }
@@ -410,17 +411,14 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
   @override
   Future<LatLngBounds> getVisibleRegion() async {
     try {
-      final Map<Object, Object> reply = await (_channel.invokeMethod('map#getVisibleRegion', null));
-      late LatLng southwest, northeast;
-      if (reply.containsKey('sw')) {
-        List<dynamic> coordinates = reply['sw'] as List<dynamic>;
-        southwest = LatLng(coordinates[0], coordinates[1]);
-      }
-      if (reply.containsKey('ne')) {
-        List<dynamic> coordinates = reply['ne'] as List<dynamic>;
-        northeast = LatLng(coordinates[0], coordinates[1]);
-      }
-      return LatLngBounds(southwest: southwest, northeast: northeast);
+      final Map<dynamic, dynamic> reply =
+      await _channel.invokeMethod('map#getVisibleRegion', null);
+      final southwest = reply['sw'] as List<dynamic>;
+      final northeast = reply['ne'] as List<dynamic>;
+      return LatLngBounds(
+        southwest: LatLng(southwest[0], southwest[1]),
+        northeast: LatLng(northeast[0], northeast[1]),
+      );
     } on PlatformException catch (e) {
       return new Future.error(e);
     }
@@ -581,7 +579,7 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
     final List<Symbol> symbols = symbolIds
         .asMap()
         .map((i, id) =>
-            MapEntry(i, Symbol(id, options.elementAt(i), data != null && data.length > i ? data.elementAt(i) : null)))
+        MapEntry(i, Symbol(id, options.elementAt(i), data != null && data.length > i ? data.elementAt(i) : null)))
         .values
         .toList();
 
