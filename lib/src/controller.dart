@@ -339,16 +339,15 @@ class MapboxMapController extends ChangeNotifier {
   /// The returned [Future] completes with the added symbol once listeners have
   /// been notified.
   Future<Symbol> addSymbol(SymbolOptions options, [Map? data]) async {
-    List<Symbol> result = await addSymbols([options], [data]);
+    List<Symbol> result = await addSymbols([options], [data].whereType<Map>().toList());
 
     return result.first;
   }
 
-  Future<List<Symbol>> addSymbols(List<SymbolOptions> options, [List<Map?>? data]) async {
+  Future<List<Symbol>> addSymbols(List<SymbolOptions> options, [List<Map>? data]) async {
     final List<SymbolOptions> effectiveOptions = options.map((o) => SymbolOptions.defaultOptions.copyWith(o)).toList();
 
-    final symbols =
-        await MapboxGlPlatform.getInstance(_id).addSymbols(effectiveOptions, data as List<Map<dynamic, dynamic>>?);
+    final symbols = await MapboxGlPlatform.getInstance(_id).addSymbols(effectiveOptions, data);
     symbols.forEach((s) => _symbols[s.id] = s);
     notifyListeners();
     return symbols;
