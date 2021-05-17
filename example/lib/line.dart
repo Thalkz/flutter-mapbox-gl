@@ -70,18 +70,12 @@ class LineBodyState extends State<LineBody> {
 
   void _add() {
     controller.addLine(
-      LineOptions(
-        geometry: [
-          LatLng(-33.86711, 151.1947171),
-          LatLng(-33.86711, 151.1947171),
-          LatLng(-32.86711, 151.1947171),
-          LatLng(-33.86711, 152.1947171),
-        ],
-        lineColor: "#ff0000",
-        lineWidth: 14.0,
-        lineOpacity: 0.5,
-        draggable: true
-      ),
+      LineOptions(geometry: [
+        LatLng(-33.86711, 151.1947171),
+        LatLng(-33.86711, 151.1947171),
+        LatLng(-32.86711, 151.1947171),
+        LatLng(-33.86711, 152.1947171),
+      ], lineColor: "#ff0000", lineWidth: 14.0, lineOpacity: 0.5, draggable: true),
     );
     setState(() {
       _lineCount += 1;
@@ -95,7 +89,6 @@ class LineBodyState extends State<LineBody> {
       _lineCount -= 1;
     });
   }
-
 
   Future<void> _changeAlpha() async {
     double current = _selectedLine.options.lineOpacity;
@@ -123,10 +116,7 @@ class LineBodyState extends State<LineBody> {
   void onStyleLoadedCallback() {
     controller.addLine(
       LineOptions(
-        geometry: [
-          LatLng(37.4220, -122.0841),
-          LatLng(37.4240, -122.0941)
-        ],
+        geometry: [LatLng(37.4220, -122.0841), LatLng(37.4240, -122.0941)],
         lineColor: "#ff0000",
         lineWidth: 14.0,
         lineOpacity: 0.5,
@@ -178,23 +168,22 @@ class LineBodyState extends State<LineBody> {
                       children: <Widget>[
                         FlatButton(
                           child: const Text('change alpha'),
-                          onPressed:
-                              (_selectedLine == null) ? null : _changeAlpha,
+                          onPressed: (_selectedLine == null) ? null : _changeAlpha,
                         ),
                         FlatButton(
                           child: const Text('toggle visible'),
-                          onPressed:
-                              (_selectedLine == null) ? null : _toggleVisible,
+                          onPressed: (_selectedLine == null) ? null : _toggleVisible,
                         ),
                         FlatButton(
                           child: const Text('print current LatLng'),
-                          onPressed:
-                              (_selectedLine == null) ? null : () async{
-                                var latLngs = await controller.getLineLatLngs(_selectedLine);
-                                for (var latLng in latLngs) {
-                                  print(latLng.toString());
-                                }
-                              },
+                          onPressed: (_selectedLine == null)
+                              ? null
+                              : () async {
+                                  var latLngs = await controller.getLineLatLngs(_selectedLine);
+                                  for (var latLng in latLngs) {
+                                    print(latLng.toString());
+                                  }
+                                },
                         ),
                       ],
                     ),

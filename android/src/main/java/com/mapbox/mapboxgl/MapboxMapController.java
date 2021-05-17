@@ -810,6 +810,9 @@ final class MapboxMapController
             }
             // CUSTOM PART BEGIN
             case "neoRanges#update": {
+                if (style == null) {
+                    result.error("STYLE IS NULL", "The style is null. Has onStyleLoaded() already been invoked?", null);
+                }
                 Object visionRangeOptionsO = call.argument("vision_range_options");
                 final Map<?, ?> visionRangeOptions = toMap(visionRangeOptionsO);
 
@@ -848,6 +851,9 @@ final class MapboxMapController
                 break;
             }
             case "neoRanges#remove": {
+                if (style == null) {
+                    result.error("STYLE IS NULL", "The style is null. Has onStyleLoaded() already been invoked?", null);
+                }
                 FeatureCollection featureCollection = FeatureCollection.fromJson("");
 
                 GeoJsonSource neoRangesSource = style.getSourceAs("neo_ranges_source");

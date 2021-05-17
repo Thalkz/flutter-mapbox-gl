@@ -45,7 +45,7 @@ class MapUiBodyState extends State<MapUiBody> {
   MinMaxZoomPreference _minMaxZoomPreference = MinMaxZoomPreference.unbounded;
   int _styleStringIndex = 0;
   // Style string can a reference to a local or remote resources.
-  // On Android the raw JSON can also be passed via a styleString, on iOS this is not supported. 
+  // On Android the raw JSON can also be passed via a styleString, on iOS this is not supported.
   List<String> _styleStrings = [MapboxStyles.MAPBOX_STREETS, MapboxStyles.SATELLITE, "assets/style.json"];
   List<String> _styleStringLabels = ["MAPBOX_STREETS", "SATELLITE", "LOCAL_ASSET"];
   bool _rotateGesturesEnabled = true;
@@ -94,11 +94,15 @@ class MapUiBodyState extends State<MapUiBody> {
 
   Widget _queryFilterToggler() {
     return FlatButton(
-      child: Text('filter zoo on click ${ _featureQueryFilter == null ? 'disabled' : 'enabled'}'),
+      child: Text('filter zoo on click ${_featureQueryFilter == null ? 'disabled' : 'enabled'}'),
       onPressed: () {
         setState(() {
           if (_featureQueryFilter == null) {
-            _featureQueryFilter = ["==", ["get", "type"] , "zoo"];
+            _featureQueryFilter = [
+              "==",
+              ["get", "type"],
+              "zoo"
+            ];
           } else {
             _featureQueryFilter = null;
           }
@@ -121,15 +125,12 @@ class MapUiBodyState extends State<MapUiBody> {
   Widget _latLngBoundsToggler() {
     return FlatButton(
       child: Text(
-        _cameraTargetBounds.bounds == null
-            ? 'bound camera target'
-            : 'release camera target',
+        _cameraTargetBounds.bounds == null ? 'bound camera target' : 'release camera target',
       ),
       onPressed: () {
         setState(() {
-          _cameraTargetBounds = _cameraTargetBounds.bounds == null
-              ? CameraTargetBounds(sydneyBounds)
-              : CameraTargetBounds.unbounded;
+          _cameraTargetBounds =
+              _cameraTargetBounds.bounds == null ? CameraTargetBounds(sydneyBounds) : CameraTargetBounds.unbounded;
         });
       },
     );
@@ -137,9 +138,7 @@ class MapUiBodyState extends State<MapUiBody> {
 
   Widget _zoomBoundsToggler() {
     return FlatButton(
-      child: Text(_minMaxZoomPreference.minZoom == null
-          ? 'bound zoom'
-          : 'release zoom'),
+      child: Text(_minMaxZoomPreference.minZoom == null ? 'bound zoom' : 'release zoom'),
       onPressed: () {
         setState(() {
           _minMaxZoomPreference = _minMaxZoomPreference.minZoom == null
@@ -228,12 +227,14 @@ class MapUiBodyState extends State<MapUiBody> {
     );
   }
 
-  Widget _visibleRegionGetter(){
+  Widget _visibleRegionGetter() {
     return FlatButton(
       child: Text('get currently visible region'),
-      onPressed: () async{
+      onPressed: () async {
         var result = await mapController.getVisibleRegion();
-        Scaffold.of(context).showSnackBar(SnackBar(content: Text("SW: ${result.southwest.toString()} NE: ${result.northeast.toString()}"),));
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text("SW: ${result.southwest.toString()} NE: ${result.northeast.toString()}"),
+        ));
       },
     );
   }
@@ -241,42 +242,41 @@ class MapUiBodyState extends State<MapUiBody> {
   @override
   Widget build(BuildContext context) {
     final MapboxMap mapboxMap = MapboxMap(
-      accessToken: MapsDemo.ACCESS_TOKEN,
-      onMapCreated: onMapCreated,
-      initialCameraPosition: _kInitialPosition,
-      trackCameraPosition: true,
-      compassEnabled: _compassEnabled,
-      cameraTargetBounds: _cameraTargetBounds,
-      minMaxZoomPreference: _minMaxZoomPreference,
-      styleString: _styleStrings[_styleStringIndex],
-      rotateGesturesEnabled: _rotateGesturesEnabled,
-      scrollGesturesEnabled: _scrollGesturesEnabled,
-      tiltGesturesEnabled: _tiltGesturesEnabled,
-      zoomGesturesEnabled: _zoomGesturesEnabled,
-      myLocationEnabled: _myLocationEnabled,
-      myLocationTrackingMode: _myLocationTrackingMode,
-      myLocationRenderMode: MyLocationRenderMode.GPS,
-      onMapClick: (point, latLng) async {
-        print("Map click: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
-        print("Filter $_featureQueryFilter");
-        List features = await mapController.queryRenderedFeatures(point, [], _featureQueryFilter);
-        if (features.length>0) {
-          print(features[0]);
-        }
-      },
-      onMapLongClick: (point, latLng) async {
-        print("Map long press: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
-        List features = await mapController.queryRenderedFeatures(point, [], null);
-        if (features.length>0) {
-          print(features[0]);
-        }
-      },
-      onCameraTrackingDismissed: () {
-        this.setState(() {
-          _myLocationTrackingMode = MyLocationTrackingMode.None;
+        accessToken: MapsDemo.ACCESS_TOKEN,
+        onMapCreated: onMapCreated,
+        initialCameraPosition: _kInitialPosition,
+        trackCameraPosition: true,
+        compassEnabled: _compassEnabled,
+        cameraTargetBounds: _cameraTargetBounds,
+        minMaxZoomPreference: _minMaxZoomPreference,
+        styleString: _styleStrings[_styleStringIndex],
+        rotateGesturesEnabled: _rotateGesturesEnabled,
+        scrollGesturesEnabled: _scrollGesturesEnabled,
+        tiltGesturesEnabled: _tiltGesturesEnabled,
+        zoomGesturesEnabled: _zoomGesturesEnabled,
+        myLocationEnabled: _myLocationEnabled,
+        myLocationTrackingMode: _myLocationTrackingMode,
+        myLocationRenderMode: MyLocationRenderMode.GPS,
+        onMapClick: (point, latLng) async {
+          print("Map click: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
+          print("Filter $_featureQueryFilter");
+          List features = await mapController.queryRenderedFeatures(point, [], _featureQueryFilter);
+          if (features.length > 0) {
+            print(features[0]);
+          }
+        },
+        onMapLongClick: (point, latLng) async {
+          print("Map long press: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
+          List features = await mapController.queryRenderedFeatures(point, [], null);
+          if (features.length > 0) {
+            print(features[0]);
+          }
+        },
+        onCameraTrackingDismissed: () {
+          this.setState(() {
+            _myLocationTrackingMode = MyLocationTrackingMode.None;
+          });
         });
-      }
-    );
 
     final List<Widget> columnChildren = <Widget>[
       Padding(
@@ -297,8 +297,7 @@ class MapUiBodyState extends State<MapUiBody> {
           child: ListView(
             children: <Widget>[
               Text('camera bearing: ${_position.bearing}'),
-              Text(
-                  'camera target: ${_position.target.latitude.toStringAsFixed(4)},'
+              Text('camera target: ${_position.target.latitude.toStringAsFixed(4)},'
                   '${_position.target.longitude.toStringAsFixed(4)}'),
               Text('camera zoom: ${_position.zoom}'),
               Text('camera tilt: ${_position.tilt}'),
@@ -333,8 +332,7 @@ class MapUiBodyState extends State<MapUiBody> {
     mapController.addListener(_onMapChanged);
     _extractMapInfo();
 
-    mapController.getTelemetryEnabled().then((isEnabled) =>
-        setState(() {
+    mapController.getTelemetryEnabled().then((isEnabled) => setState(() {
           _telemetryEnabled = isEnabled;
         }));
   }

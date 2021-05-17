@@ -87,14 +87,14 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
             heading: heading == null
                 ? null
                 : UserHeading(
-              magneticHeading: heading['magneticHeading'],
-              trueHeading: heading['trueHeading'],
-              headingAccuracy: heading['headingAccuracy'],
-              x: heading['x'],
-              y: heading['y'],
-              z: heading['x'],
-              timestamp: DateTime.fromMillisecondsSinceEpoch(heading['timestamp']),
-            ),
+                    magneticHeading: heading['magneticHeading'],
+                    trueHeading: heading['trueHeading'],
+                    headingAccuracy: heading['headingAccuracy'],
+                    x: heading['x'],
+                    y: heading['y'],
+                    z: heading['x'],
+                    timestamp: DateTime.fromMillisecondsSinceEpoch(heading['timestamp']),
+                  ),
             timestamp: DateTime.fromMillisecondsSinceEpoch(userLocation['timestamp'])));
         break;
       default:
@@ -113,12 +113,29 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
   Widget buildView(Map<String, dynamic> creationParams, Function onPlatformViewCreated,
       Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers) {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return AndroidView(
-        viewType: 'plugins.flutter.io/mapbox_gl',
-        onPlatformViewCreated: onPlatformViewCreated as void Function(int)?,
-        gestureRecognizers: gestureRecognizers,
-        creationParams: creationParams,
-        creationParamsCodec: const StandardMessageCodec(),
+      final String viewType = 'plugins.flutter.io/mapbox_gl';
+      final Map<String, dynamic> creationParams = <String, dynamic>{};
+
+      return PlatformViewLink(
+        viewType: viewType,
+        surfaceFactory: (BuildContext context, PlatformViewController controller) {
+          return AndroidViewSurface(
+            controller: controller as AndroidViewController,
+            gestureRecognizers: gestureRecognizers,
+            hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+          );
+        },
+        onCreatePlatformView: (PlatformViewCreationParams params) {
+          return PlatformViewsService.initSurfaceAndroidView(
+            id: params.id,
+            viewType: viewType,
+            layoutDirection: TextDirection.ltr,
+            creationParams: creationParams,
+            creationParamsCodec: StandardMessageCodec(),
+          )
+            ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+            ..create();
+        },
       );
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       return UiKitView(
@@ -212,7 +229,7 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
     final List<Symbol> symbols = symbolIds
         .asMap()
         .map((i, id) =>
-        MapEntry(i, Symbol(id, options.elementAt(i), data != null && data.length > i ? data.elementAt(i) : null)))
+            MapEntry(i, Symbol(id, options.elementAt(i), data != null && data.length > i ? data.elementAt(i) : null)))
         .values
         .toList();
 
@@ -393,9 +410,8 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
   Future<LatLng> requestMyLocationLatLng() async {
     try {
       final Map<Object, Object> reply =
-      await (_channel.invokeMethod('locationComponent#getLastLocation', null) as Future<Map<Object, Object>>);
-      double latitude = 0.0,
-          longitude = 0.0;
+          await (_channel.invokeMethod('locationComponent#getLastLocation', null) as Future<Map<Object, Object>>);
+      double latitude = 0.0, longitude = 0.0;
       if (reply.containsKey('latitude') && reply['latitude'] != null) {
         latitude = double.parse(reply['latitude'].toString());
       }
@@ -411,8 +427,7 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
   @override
   Future<LatLngBounds> getVisibleRegion() async {
     try {
-      final Map<dynamic, dynamic> reply =
-      await _channel.invokeMethod('map#getVisibleRegion', null);
+      final Map<dynamic, dynamic> reply = await _channel.invokeMethod('map#getVisibleRegion', null);
       final southwest = reply['sw'] as List<dynamic>;
       final northeast = reply['ne'] as List<dynamic>;
       return LatLngBounds(
@@ -579,7 +594,7 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
     final List<Symbol> symbols = symbolIds
         .asMap()
         .map((i, id) =>
-        MapEntry(i, Symbol(id, options.elementAt(i), data != null && data.length > i ? data.elementAt(i) : null)))
+            MapEntry(i, Symbol(id, options.elementAt(i), data != null && data.length > i ? data.elementAt(i) : null)))
         .values
         .toList();
 
