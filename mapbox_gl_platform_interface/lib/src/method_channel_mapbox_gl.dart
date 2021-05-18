@@ -114,8 +114,6 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
       Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers) {
     if (defaultTargetPlatform == TargetPlatform.android) {
       final String viewType = 'plugins.flutter.io/mapbox_gl';
-      final Map<String, dynamic> creationParams = <String, dynamic>{};
-
       return PlatformViewLink(
         viewType: viewType,
         surfaceFactory: (BuildContext context, PlatformViewController controller) {
