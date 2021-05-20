@@ -114,6 +114,7 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
       Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers) {
     if (defaultTargetPlatform == TargetPlatform.android) {
       final String viewType = 'plugins.flutter.io/mapbox_gl';
+
       return PlatformViewLink(
         viewType: viewType,
         surfaceFactory: (BuildContext context, PlatformViewController controller) {
@@ -129,9 +130,10 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
             viewType: viewType,
             layoutDirection: TextDirection.ltr,
             creationParams: creationParams,
-            creationParamsCodec: StandardMessageCodec(),
+            creationParamsCodec: const StandardMessageCodec(),
           )
             ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+            ..addOnPlatformViewCreatedListener(onPlatformViewCreated as Function(int))
             ..create();
         },
       );
