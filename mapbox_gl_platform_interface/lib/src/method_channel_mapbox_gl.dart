@@ -115,14 +115,6 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
     if (defaultTargetPlatform == TargetPlatform.android) {
       final String viewType = 'plugins.flutter.io/mapbox_gl';
 
-      // return AndroidView(
-      //   viewType: 'plugins.flutter.io/mapbox_gl',
-      //   onPlatformViewCreated: onPlatformViewCreated as void Function(int)?,
-      //   gestureRecognizers: gestureRecognizers,
-      //   creationParams: creationParams,
-      //   creationParamsCodec: const StandardMessageCodec(),
-      // );
-
       return PlatformViewLink(
         viewType: viewType,
         surfaceFactory: (BuildContext context, PlatformViewController controller) {
